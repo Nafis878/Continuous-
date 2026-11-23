@@ -44,6 +44,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -64,10 +65,114 @@ def banner(text: str):
     print("\n" + "=" * 78 + f"\n  {text}\n" + "=" * 78, flush=True)
 
 
+DRIVE_MOUNT = "/content/drive"
+LOCAL_WORK = "/content/crb_work"
+
+
+def _under_drive(p) -> bool:
+    return str(p).replace("\\", "/").startswith(DRIVE_MOUNT + "/")
+
+
+class Mirror:
+    """
+    Copies the local work folder to the final output folder (e.g. Google Drive).
+
+    Colab's Drive mount can drop mid-run ("[Errno 107] Transport endpoint is not
+    connected"). The pipeline therefore always writes to local disk and this
+    mirror copies changed files to Drive periodically and after every stage.
+    Copy errors never stop the pipeline; they are reported and retried later.
+    Files are copied to "<name>.synctmp" and renamed, so Drive never holds a
+    half-written file.
+    """
+
+    def __init__(self, work: Path, final: Path, every: int):
+        self.work, self.final, self.every = work, final, every
+        self.enabled = work.resolve() != final.resolve()
+        self.ok = True
+        self.last_error: str | None = None
+        self.last_sync: float | None = None
+        self._stop = threading.Event()
+        self._lock = threading.Lock()
+        self._thread: threading.Thread | None = None
+
+    @staticmethod
+    def _copy_tree(src: Path, dst: Path, only_newer: bool = True) -> int:
+        n = 0
+        for f in src.rglob("*"):
+            if not f.is_file() or f.name.endswith(".synctmp"):
+                continue
+            t = dst / f.relative_to(src)
+            st = f.stat()
+            if only_newer and t.exists():
+                tt = t.stat()
+                if tt.st_size == st.st_size and tt.st_mtime >= st.st_mtime - 1:
+                    continue
+            t.parent.mkdir(parents=True, exist_ok=True)
+            tmp = t.with_name(t.name + ".synctmp")
+            shutil.copy2(f, tmp)
+            os.replace(tmp, t)
+            n += 1
+        return n
+
+    def seed_from_final(self):
+        """Resume support: bring earlier results (e.g. from Drive) into the local work folder."""
+        if not self.enabled or not self.final.exists():
+            return
+        try:
+            n = self._copy_tree(self.final, self.work)
+            if n:
+                print(f"[sync] restored {n} file(s) from {self.final} -> {self.work} (resuming)", flush=True)
+        except OSError as exc:
+            print(f"[sync] WARNING: could not read earlier results from {self.final}: {exc}", flush=True)
+
+    def sync(self, reason: str = "") -> bool:
+        if not self.enabled:
+            return True
+        with self._lock:
+            try:
+                n = self._copy_tree(self.work, self.final)
+                if not self.ok:
+                    print(f"[sync] Drive reachable again - results synced to {self.final}", flush=True)
+                self.ok, self.last_error, self.last_sync = True, None, time.time()
+                if n and reason:
+                    print(f"[sync] {n} file(s) -> {self.final} ({reason})", flush=True)
+                return True
+            except OSError as exc:
+                if self.ok:
+                    print(f"[sync] WARNING: cannot write to {self.final}: {exc}\n"
+                          f"[sync] The pipeline keeps running; results are safe in {self.work} and "
+                          f"will be copied when the folder is reachable again.", flush=True)
+                self.ok, self.last_error = False, str(exc)
+                return False
+
+    def start(self):
+        if not self.enabled or self.every <= 0:
+            return
+
+        def loop():
+            while not self._stop.wait(self.every):
+                self.sync()
+
+        self._thread = threading.Thread(target=loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=5)
+
+
 class Pipeline:
     def __init__(self, args):
         self.args = args
-        self.out = Path(args.out).resolve()
+        self.final = Path(args.out).resolve()
+        if args.work_dir:
+            self.out = Path(args.work_dir).resolve()
+        elif _under_drive(args.out):
+            self.out = Path(LOCAL_WORK)  # write locally, mirror to Drive
+        else:
+            self.out = self.final
+        self.mirror = Mirror(self.out, self.final, args.sync_every)
         self.logs = self.out / "logs"
         self.status: list[dict] = []
         self.py = sys.executable
@@ -97,6 +202,7 @@ class Pipeline:
         self.status.append({"stage": name, "status": "ok" if ok else f"failed (exit {rc})",
                             "minutes": round((time.time() - t0) / 60, 2), "cmd": cmd})
         print(f"--> {name}: {'OK' if ok else f'FAILED (exit {rc})'} in {(time.time() - t0) / 60:.1f} min", flush=True)
+        self.mirror.sync(f"after {name}")
         return ok
 
     def skip(self, name: str, why: str):
@@ -111,7 +217,9 @@ class Pipeline:
                 return False
         print(f"python  {platform.python_version()} ({sys.executable})")
         print(f"repo    {REPO}")
-        print(f"output  {self.out}")
+        print(f"output  {self.final}")
+        if self.mirror.enabled:
+            print(f"work    {self.out}  (local; copied to output every {self.args.sync_every}s and after each stage)")
         missing = []
         for mod in ("numpy", "pandas", "sklearn", "h5py", "torch"):
             try:
@@ -226,10 +334,10 @@ class Pipeline:
         for s in self.status:
             mins = f"{s['minutes']:.1f} min" if "minutes" in s else ""
             print(f"  {s['stage']:18s} {s['status']:28s} {mins}")
-        lb = self.out / ("smoke" if self.args.quick else "benchmark") / "LEADERBOARD.md"
-        if lb.exists():
-            print(f"\nLeaderboard: {lb}")
-        print(f"Logs:        {self.logs}")
+        sub = ("smoke" if self.args.quick else "benchmark") + "/LEADERBOARD.md"
+        if (self.out / sub).exists():
+            print(f"\nLeaderboard: {self.final / sub}")
+        print(f"Logs:        {self.final / 'logs'}")
         print(f"Total time:  {(time.time() - t0) / 60:.1f} min")
         if not self.args.dry_run:
             self.out.mkdir(parents=True, exist_ok=True)
@@ -238,11 +346,30 @@ class Pipeline:
                 "args": {k: (str(v) if isinstance(v, Path) else v) for k, v in vars(self.args).items()},
                 "stages": self.status,
             }, indent=2, default=str))
+            self.mirror.stop()
+            if self.mirror.enabled and not self.mirror.sync("final"):
+                print(f"\nWARNING: could not copy results to {self.final} ({self.mirror.last_error}).\n"
+                      f"They are safe in {self.out} (until the runtime is reset). Re-mount Google Drive:\n"
+                      "    from google.colab import drive; drive.flush_and_unmount(); "
+                      "drive.mount('/content/drive', force_remount=True)\n"
+                      "then copy them with:\n"
+                      f"    python run_pipeline.py --sync-only --out \"{self.final}\"")
+                failed = failed or [{"stage": "sync"}]
+            elif self.mirror.enabled:
+                print(f"All results copied to {self.final}")
         print("\nPIPELINE " + ("FAILED" if failed else "COMPLETED"))
         return 1 if failed else 0
 
     def main(self) -> int:
         t0 = time.time()
+        if not self.args.dry_run:
+            self.out.mkdir(parents=True, exist_ok=True)
+            self.mirror.seed_from_final()
+            if self.args.sync_only:
+                ok = self.mirror.sync("sync-only") if self.mirror.enabled else True
+                print(f"Synced {self.out} -> {self.final}" if ok else f"Sync FAILED: {self.mirror.last_error}")
+                return 0 if ok else 1
+            self.mirror.start()
         if not self.stage_env():
             return self.summary(t0)
         if not self.stage_data():
@@ -276,26 +403,42 @@ def parse_args(argv=None):
     ap.add_argument("--keep-going", action="store_true", help="run studies even if the benchmark failed")
     ap.add_argument("--install", action="store_true", help="pip install -r ml_pipeline/requirements.txt first")
     ap.add_argument("--dry-run", action="store_true", help="print the commands without running them")
+    ap.add_argument("--work-dir", help=f"local working folder (default: {LOCAL_WORK} when --out is on "
+                                       "Google Drive, otherwise --out itself)")
+    ap.add_argument("--sync-every", type=int, default=120, help="seconds between copies work -> --out (default 120)")
+    ap.add_argument("--sync-only", action="store_true", help="only copy the work folder to --out, then exit")
     a = ap.parse_args(argv)
     if a.all:
         a.with_ncmapss = a.with_studies = a.with_scania = a.with_ablation = True
     return a
 
 
-DRIVE_MOUNT = "/content/drive"
-
-
 def check_drive_paths(args) -> str | None:
     """
-    Refuse to write into /content/drive/... unless Google Drive is actually mounted there.
-    Otherwise results would silently go to a local folder (lost on reset) and Colab's
-    drive.mount() would later fail with "Mountpoint must not already contain files".
+    Refuse to use /content/drive/... unless Google Drive is mounted there AND reachable.
+    Not mounted -> results would go to a plain local folder and a later drive.mount() fails
+    with "Mountpoint must not already contain files". Mounted but broken -> "[Errno 107]
+    Transport endpoint is not connected".
     """
     paths = [p for p in (args.out, args.ncmapss_dir) if p]
-    if not any(str(p).replace("\\", "/").startswith(DRIVE_MOUNT + "/") for p in paths):
+    if not any(_under_drive(p) for p in paths):
         return None
     if os.path.ismount(DRIVE_MOUNT):
-        return None
+        try:
+            os.listdir(DRIVE_MOUNT)
+            return None
+        except OSError as exc:
+            return (
+                f"Google Drive is mounted at {DRIVE_MOUNT} but not reachable ({exc}).\n"
+                "The Drive connection dropped. Re-mount it in a Colab cell, then re-run the pipeline\n"
+                "(finished work is resumed; downloaded N-CMAPSS files are reused):\n\n"
+                "    from google.colab import drive\n"
+                "    try:\n"
+                "        drive.flush_and_unmount()\n"
+                "    except Exception:\n"
+                "        pass\n"
+                f"    drive.mount('{DRIVE_MOUNT}', force_remount=True)\n"
+            )
     return (
         f"--out / --ncmapss-dir point into {DRIVE_MOUNT}, but Google Drive is NOT mounted there.\n"
         "Run this in a Colab cell first, then re-run the pipeline:\n\n"

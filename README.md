@@ -74,6 +74,25 @@ else:
 | `--install` | `pip install -r ml_pipeline/requirements.txt` first |
 | `--skip-smoke`, `--keep-going`, `--dry-run` | skip smoke test / run studies even if benchmark failed / print plan |
 
+### If Google Drive disconnects (`[Errno 107] Transport endpoint is not connected`)
+
+Colab's Drive mount can drop during long runs. The pipeline is built for this: when `--out` is on
+Drive it works in a local folder (`/content/crb_work`) and copies results to Drive every 2 minutes
+and after each stage; a dropped Drive only causes a warning and is retried. To recover, re-mount and
+re-run the same command (finished work resumes, downloaded N-CMAPSS files are reused):
+
+```python
+from google.colab import drive
+try:
+    drive.flush_and_unmount()
+except Exception:
+    pass
+drive.mount("/content/drive", force_remount=True)
+```
+
+If the run already finished while Drive was down, copy the results over with
+`python run_pipeline.py --sync-only --out /content/drive/MyDrive/CRB/results`.
+
 ## Run locally
 
 ```bash

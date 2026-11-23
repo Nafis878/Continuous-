@@ -18,6 +18,7 @@ Examples
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import sys
 import time
@@ -219,7 +220,9 @@ def main():
                 if device == "cuda":
                     torch.cuda.empty_cache()
             rows.append(row)
-            pd.DataFrame(rows).to_csv(runs_path, index=False)
+            tmp = runs_path.with_name("runs.csv.tmp")  # atomic replace: never a half-written runs.csv
+            pd.DataFrame(rows).to_csv(tmp, index=False)
+            os.replace(tmp, runs_path)
             build_leaderboards(pd.DataFrame(rows), out, args.quick)
 
     all_runs = pd.DataFrame(rows)
