@@ -20,12 +20,21 @@
 - Legacy `run_all.py` (cross-family "accuracy" leaderboard) removed.
 - All earlier result files removed (see `results/README.md`); re-run on Colab to regenerate.
 
+## Continuous RUL Benchmark (2026-11-24)
+- Main goal: establish a new benchmark in the continuous domain → `BENCHMARK.md`, `run_benchmark.py`.
+- Stronger baselines added: BiLSTM-Attn, CNN1D, CNN-LSTM, TCN, Transformer, HistGB, Ridge (+ MeanRUL floor).
+- Proposed: CATT (Condition-Aware TCN-Transformer) + TCT (Trajectory-Consistent Training).
+- Verified locally (CPU): quick mode, all 12 models × 5 datasets OK; synthetic N-CMAPSS file OK;
+  resume OK; FD001 15-epoch check: MeanRUL 37.6 / LSTM 15.6 / CATT 14.6 / CATT+TCT 15.2 continuous RMSE.
+
 ## Next
-1. Re-run everything on Colab (T4) with 3 seeds → new reference numbers.
-2. Stronger baselines for the continuous setting (e.g. 1D-CNN, CNN-LSTM, TCN, Transformer, LightGBM).
-3. New method + new architecture for the continuous domain, benchmarked against those baselines.
+1. Full benchmark on Colab T4 (`colab_run.ipynb`), 3 seeds → first official leaderboard.
+2. Add N-CMAPSS (.h5 on Drive) to the benchmark run.
+3. Tune TCT weights (λ, late penalty) on validation if CATT+TCT does not beat CATT on RMSE; report
+   the TCE / RMSE≤30 trade-off honestly either way.
 
 ## Commands
 ```bash
-python ml_pipeline/run_family_comparison.py --seeds 42 43 44
+python ml_pipeline/run_benchmark.py --quick   # smoke test
+python ml_pipeline/run_benchmark.py           # full benchmark
 ```

@@ -1,40 +1,57 @@
-# Research (Main) — Predictive Maintenance Pipelines
+# Continuous RUL Benchmark (CRB)
 
-End-to-end ML experiments on CMAPSS, PHM08, N-CMAPSS, and SCANIA Component X, with within-family metrics (RUL → RMSE/MAE/R²/PHM Score; SCANIA → Total_cost / F1).
+A benchmark and reference implementation for **remaining-useful-life (RUL) prediction in the
+continuous domain**: every model is scored on every sliding window along each test trajectory
+(how it behaves when deployed cycle-by-cycle), with the classic last-window score reported alongside.
 
-## Layout
+- **Protocol + metrics** — fixed splits, step-1 sliding windows, continuous RMSE (primary),
+  critical-zone RMSE (RUL ≤ 30), trajectory consistency error (TCE), PHM score, last-window RMSE.
+- **Strong baselines** — MeanRUL, Ridge, HistGB, LSTM, BiLSTM-Attn, 1D-CNN, CNN-LSTM, TCN, Transformer,
+  all trained by the same code with the same budget, 3 seeds each.
+- **Proposed** — **CATT** (Condition-Aware TCN-Transformer) architecture and **TCT**
+  (Trajectory-Consistent Training) method.
 
-- `ml_pipeline/` — training, ablation, family comparison, condition-clustered RUL
-- `CMAPSS/`, `PHM08/`, `N-CMAPSS/`, `SCANIA-Component-X/`, `alfa-dataset-tools/`
-- See `DATASETS.md` for what is in git vs download-only (N-CMAPSS `.h5`)
-
-Evaluation uses a **continuous sliding window** (every overlapping window, step 1),
-scores every test window (plus the classic last-window benchmark where valid), runs
-3 seeds, and always reports trivial baselines. Details: `ml_pipeline/README.md`.
+Full specification: **[BENCHMARK.md](BENCHMARK.md)**.
 
 ## Run on Google Colab (T4 GPU)
 
-Open [`colab_run.ipynb`](colab_run.ipynb) in Colab, set Runtime → Change runtime type → **T4 GPU**,
-and run all cells. It clones this repo, pulls the LFS data, installs dependencies, runs every
-experiment and (optionally) saves results to Google Drive.
+1. Open [`colab_run.ipynb`](colab_run.ipynb) in Colab (File → Open notebook → GitHub, or upload it).
+2. Runtime → Change runtime type → **T4 GPU**.
+3. Run all cells. The notebook clones this repo, installs dependencies, runs a 2-minute smoke test,
+   then the full benchmark, saving results to Google Drive after every run (re-run to resume after a
+   disconnect).
 
-## Local setup
+## Run locally
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r ml_pipeline/requirements.txt
-git lfs install && git lfs pull   # SCANIA large CSVs
+python ml_pipeline/run_benchmark.py --quick     # smoke test
+python ml_pipeline/run_benchmark.py             # full benchmark
 ```
 
-## Main commands
+Results: `ml_pipeline/results/benchmark/LEADERBOARD.md` (+ `runs.csv`, `leaderboard.csv`).
 
-```bash
-python ml_pipeline/run_family_comparison.py
-python ml_pipeline/run_ablation.py
-python ml_pipeline/run_condition_rul.py
-python ml_pipeline/run_scania_cost_tune.py
-python ml_pipeline/run_n_cmapss_multi.py
-```
+## Datasets
 
-Results live under `ml_pipeline/results/`.
+| Dataset | In repo | Notes |
+|---|---|---|
+| CMAPSS FD001–FD004 | yes (`CMAPSS/`) | official train/test + RUL files |
+| PHM08 | yes (`PHM08/`) | official test RUL hidden → held-out train units |
+| N-CMAPSS DS01/02/03/05/07 | no (~28 GB) | put `.h5` files in `N-CMAPSS/data_set/` or set `NCMAPSS_DIR`; skipped if absent |
+| SCANIA Component X | yes (Git LFS) | used by the separate classification study, not by CRB |
+
+See [DATASETS.md](DATASETS.md).
+
+## Other experiments (`ml_pipeline/`)
+
+| Script | Purpose |
+|---|---|
+| `run_benchmark.py` | **CRB benchmark** (main entry point) |
+| `run_family_comparison.py` | earlier within-family comparison incl. SCANIA classification (cost metric) |
+| `run_condition_rul.py` | condition clustering vs. plain scaling on FD002/FD004 |
+| `run_scania_cost_tune.py` | SCANIA cost-aware decoding vs. Always-0/Always-4 baselines |
+| `run_n_cmapss_multi.py` | classic models across N-CMAPSS files |
+| `run_ablation.py` | LSTM one-factor ablations |
+
+SCANIA scripts need the LFS data: `git lfs pull`.

@@ -1,5 +1,12 @@
 # End-to-End ML Pipeline
 
+> **Main entry point: `run_benchmark.py` — the Continuous RUL Benchmark (CRB).**
+> Protocol, metrics, baselines and the proposed CATT + TCT are specified in
+> [`../BENCHMARK.md`](../BENCHMARK.md). Code: `benchmark.py` (protocol), `models/deep.py`
+> (all deep models + shared trainer), `run_benchmark.py` (runner + leaderboards).
+>
+> The rest of this page describes the earlier within-family comparison scripts.
+
 Compare models **within each dataset/family** using that family's native metrics (no cross-family accuracy ranking).
 
 ## Families

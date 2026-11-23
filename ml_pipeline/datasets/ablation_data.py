@@ -81,6 +81,7 @@ def load_raw_cmapss(fd: str = "FD001", rul_cap: float = 125.0) -> dict:
             "reduced": FEAT_REDUCED,
         },
         "default_features": "selected",
+        "cond_features": FEAT_OPS,  # operating-condition channels (used by CATT FiLM)
         "default_seq_len": 30,
         # Continuous sliding window: every overlapping window (step 1).
         "stride_train": 1,
@@ -116,6 +117,7 @@ def load_raw_phm08(rul_cap: float = 125.0) -> dict:
             "reduced": FEAT_REDUCED,
         },
         "default_features": "selected",
+        "cond_features": FEAT_OPS,
         "default_seq_len": 30,
         "stride_train": 1,
         "last_window_eval": True,
@@ -151,6 +153,7 @@ def load_raw_n_cmapss(filename: str = "N-CMAPSS_DS01-005.h5", rul_cap: float = 1
             "reduced": feat_xs[:8] + feat_w[:2],
         },
         "default_features": "selected",
+        "cond_features": feat_w,  # flight conditions W (alt, Mach, TRA, T2)
         "default_seq_len": 20,
         "stride_train": 1,
         # Test units run to failure, so the last window is always RUL == 0:
@@ -246,6 +249,7 @@ def load_raw_scania_tte(
             "reduced": feat_reduced,
         },
         "default_features": "selected",
+        "cond_features": [],
         "default_seq_len": 8,
         "stride_train": 1,
         "last_window_eval": True,
