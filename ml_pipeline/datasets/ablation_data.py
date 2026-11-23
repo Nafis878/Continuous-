@@ -9,6 +9,7 @@ Design rules:
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -16,7 +17,7 @@ import pandas as pd
 
 from .cmapss import COLS as CMAPSS_COLS
 from .n_cmapss import _cycle_aggregate
-from .sequence_utils import add_rul_labels
+from .sequence_utils import add_rul_labels, truncate_trajectories
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 SEED = 42
@@ -81,8 +82,11 @@ def load_raw_cmapss(fd: str = "FD001", rul_cap: float = 125.0) -> dict:
         },
         "default_features": "selected",
         "default_seq_len": 30,
-        "stride_train": 1 if fd in ("FD001", "FD003") else 2,
-        "test_last_only": True,
+        # Continuous sliding window: every overlapping window (step 1).
+        "stride_train": 1,
+        # Official test labels are known at every cycle (RUL_last + cycles to end),
+        # so test_df supports both last-window and continuous scoring.
+        "last_window_eval": True,
     }
 
 
@@ -92,11 +96,18 @@ def load_raw_phm08(rul_cap: float = 125.0) -> dict:
     train_u, val_u, test_u = _unit_splits(
         train["unit"].unique(), val_frac=0.15, test_frac=0.20
     )
+    # Held-out units are run-to-failure: their last cycle always has RUL == 0.
+    # Cut each one at random cycles before failure (CMAPSS-style test cases).
+    test_df = truncate_trajectories(
+        train.loc[train["unit"].isin(test_u)], n_cuts=5, min_len=30, seed=SEED
+    )
     return {
         "name": "PHM08",
         "train_df": train.loc[train["unit"].isin(train_u)].reset_index(drop=True),
         "val_df": train.loc[train["unit"].isin(val_u)].reset_index(drop=True),
-        "test_df": train.loc[train["unit"].isin(test_u)].reset_index(drop=True),
+        "test_df": test_df,
+        # Continuous scoring runs over the full held-out trajectories.
+        "test_cont_df": train.loc[train["unit"].isin(test_u)].reset_index(drop=True),
         "feature_presets": {
             "selected": FEAT_SELECTED,
             "all": FEAT_ALL,
@@ -106,15 +117,18 @@ def load_raw_phm08(rul_cap: float = 125.0) -> dict:
         },
         "default_features": "selected",
         "default_seq_len": 30,
-        "stride_train": 2,
-        "test_last_only": True,
-        "note": "Official test RUL hidden; held-out train units used as test.",
+        "stride_train": 1,
+        "last_window_eval": True,
+        "note": "Official test RUL hidden; held-out train units, each cut at 5 random cycles before failure.",
     }
 
 
 def load_raw_n_cmapss(filename: str = "N-CMAPSS_DS01-005.h5", rul_cap: float = 100.0) -> dict:
-    root = WORKSPACE / "N-CMAPSS" / "data_set"
+    # NCMAPSS_DIR lets the ~28 GB .h5 files live elsewhere (e.g. Google Drive on Colab).
+    root = Path(os.environ.get("NCMAPSS_DIR", WORKSPACE / "N-CMAPSS" / "data_set"))
     path = root / filename
+    if not path.exists():
+        raise FileNotFoundError(f"{path} (download N-CMAPSS .h5 files; see DATASETS.md)")
     train_df = _cycle_aggregate(path, "dev")
     test_df = _cycle_aggregate(path, "test")
     train_df["RUL"] = np.minimum(train_df["RUL"], rul_cap)
@@ -139,7 +153,10 @@ def load_raw_n_cmapss(filename: str = "N-CMAPSS_DS01-005.h5", rul_cap: float = 1
         "default_features": "selected",
         "default_seq_len": 20,
         "stride_train": 1,
-        "test_last_only": True,
+        # Test units run to failure, so the last window is always RUL == 0:
+        # last-window scoring is meaningless here. Score continuously only
+        # (every test window; standard N-CMAPSS protocol).
+        "last_window_eval": False,
     }
 
 
@@ -155,13 +172,14 @@ def load_raw_scania_tte(
     root = WORKSPACE / "SCANIA-Component-X" / "data"
     tte = pd.read_csv(root / "train_tte.csv")
     specs = pd.read_csv(root / "train_specifications.csv")
-    # Prefer repaired vehicles for identifiable TTE; add some censored
+    # Only repaired vehicles have a known time-to-event. Censored vehicles
+    # (no repair in study) have no true RUL, so treating end-of-study as
+    # failure would give wrong labels -> excluded.
     rng = np.random.default_rng(SEED)
     repaired = tte.loc[tte["in_study_repair"] == 1, "vehicle_id"].to_numpy()
-    censored = tte.loc[tte["in_study_repair"] == 0, "vehicle_id"].to_numpy()
-    n_c = min(len(censored), max(0, max_vehicles - len(repaired)))
-    pick_c = rng.choice(censored, size=n_c, replace=False) if n_c else np.array([], dtype=int)
-    selected = set(repaired.tolist() + pick_c.tolist())
+    if len(repaired) > max_vehicles:
+        repaired = rng.choice(repaired, size=max_vehicles, replace=False)
+    selected = set(repaired.tolist())
 
     ops = pd.read_csv(root / "train_operational_readouts.csv")
     ops = ops[ops["vehicle_id"].isin(selected)].copy()
@@ -169,12 +187,11 @@ def load_raw_scania_tte(
     ops[feature_cols] = ops[feature_cols].fillna(0.0)
 
     tte_i = tte.set_index("vehicle_id")
-    # RUL target: time until repair, or remaining study time if censored
+    # RUL target: time until repair
     fail = ops["vehicle_id"].map(tte_i["length_of_study_time_step"]).astype(float)
     repaired_f = ops["vehicle_id"].map(tte_i["in_study_repair"]).astype(int)
     rul = fail - ops["time_step"].astype(float)
     rul = np.clip(rul, 0, rul_cap)
-    # For censored, still use remaining observation time (conservative pseudo-RUL)
     ops = ops.copy()
     ops["unit"] = ops["vehicle_id"]
     ops["cycle"] = ops.groupby("vehicle_id").cumcount() + 1
@@ -208,11 +225,19 @@ def load_raw_scania_tte(
     # reduced: first 20 op cols + all specs
     feat_reduced = feature_cols[:20] + spec_cols
 
+    # Last readout before repair has RUL ~ 0 for every vehicle -> cut held-out
+    # vehicles at random readouts before repair instead.
+    def _cut(u_set, salt):
+        return truncate_trajectories(
+            _sub(u_set), n_cuts=3, min_len=8, seed=SEED + salt
+        )
+
     return {
         "name": "SCANIA-TTE",
         "train_df": _sub(train_u),
-        "val_df": _sub(val_u),
-        "test_df": _sub(test_u),
+        "val_df": _cut(val_u, 1),
+        "test_df": _cut(test_u, 2),
+        "test_cont_df": _sub(test_u),
         "feature_presets": {
             "selected": feat_all,
             "all": feat_all,
@@ -223,9 +248,11 @@ def load_raw_scania_tte(
         "default_features": "selected",
         "default_seq_len": 8,
         "stride_train": 1,
-        "test_last_only": True,
+        "last_window_eval": True,
+        # Train windows are sampled per vehicle (all ~700k windows do not fit in
+        # Colab RAM); pass max_windows_per_vehicle=None for every window.
         "max_windows_per_vehicle": max_windows_per_vehicle,
-        "note": "TTE regression on held-out train vehicles (true event times; no class-label leakage).",
+        "note": "TTE regression on repaired train vehicles only; held-out vehicles cut at 3 random readouts before repair.",
     }
 
 
@@ -234,6 +261,9 @@ def load_all_raw_datasets() -> list[dict]:
     for fd in ("FD001", "FD002", "FD003", "FD004"):
         packs.append(load_raw_cmapss(fd))
     packs.append(load_raw_phm08())
-    packs.append(load_raw_n_cmapss())
+    try:
+        packs.append(load_raw_n_cmapss())
+    except (FileNotFoundError, OSError) as exc:
+        print(f"[skip] N-CMAPSS not available: {exc}")
     packs.append(load_raw_scania_tte())
     return packs

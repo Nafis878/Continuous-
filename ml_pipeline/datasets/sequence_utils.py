@@ -17,6 +17,46 @@ def add_rul_labels(df, unit_col="unit", cycle_col="cycle", cap: float | None = 1
     return out
 
 
+def truncate_trajectories(
+    df,
+    n_cuts: int = 5,
+    min_len: int = 30,
+    seed: int = 42,
+    unit_col: str = "unit",
+    cycle_col: str = "cycle",
+    id_multiplier: int = 1000,
+):
+    """
+    Turn run-to-failure trajectories into CMAPSS-style test cases.
+
+    The last cycle of a run-to-failure unit always has RUL == 0, so evaluating
+    the final window of each held-out unit gives a constant target (degenerate
+    metrics). Instead, cut each unit at ``n_cuts`` random cycles before failure
+    and keep only the history up to each cut. ``RUL`` must already be computed
+    from the full trajectory, so labels at the cut stay correct.
+
+    Each cut becomes its own pseudo-unit: ``unit * id_multiplier + k``.
+    """
+    import pandas as pd
+
+    rng = np.random.default_rng(seed)
+    parts = []
+    for unit, g in df.groupby(unit_col, sort=True):
+        g = g.sort_values(cycle_col)
+        n = len(g)
+        lo = min(max(1, min_len), n)  # need >= lo rows of history
+        candidates = np.arange(lo - 1, n)
+        k = min(n_cuts, len(candidates))
+        ends = np.sort(rng.choice(candidates, size=k, replace=False))
+        for j, end in enumerate(ends):
+            part = g.iloc[: end + 1].copy()
+            part[unit_col] = int(unit) * id_multiplier + j
+            parts.append(part)
+    if not parts:
+        return df.iloc[0:0].copy()
+    return pd.concat(parts, ignore_index=True)
+
+
 def build_windows_from_units(
     df,
     feature_cols,

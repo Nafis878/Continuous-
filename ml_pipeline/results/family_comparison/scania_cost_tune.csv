@@ -1,4 +1,0 @@
-dataset,model,decision_rule,val_cost_argmax,val_cost_decode,test_total_cost,test_f1_macro,test_accuracy,test_recall_1,test_recall_2,test_recall_3,test_recall_4
-SCANIA-Component-X,RandomForest,cost_decode,57646.0,49084.0,49039.0,0.009436807007330175,0.022993062438057484,0.0,0.0,0.0,0.9833333333333333
-SCANIA-Component-X,GradientBoosting,cost_decode,58388.0,47374.0,49695.0,0.10081295737981373,0.2937561942517344,0.0,0.13333333333333333,0.12195121951219512,0.5
-SCANIA-Component-X,LSTM,cost_decode,64624.0,53039.0,50783.0,0.008144533519228534,0.011298315163528246,0.0,0.0,0.024390243902439025,0.9333333333333333

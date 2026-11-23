@@ -1,4 +1,4 @@
-"""N-CMAPSS loader with cycle-level aggregation (memory-safe)."""
+"""N-CMAPSS cycle-level aggregation (memory-safe). Loading lives in ablation_data.py."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from .sequence_utils import build_windows_from_units, fit_scale_windows
 
 
 def _decode_vars(arr) -> list[str]:
@@ -50,66 +49,3 @@ def _cycle_aggregate(h5_path: Path, split: str = "dev") -> pd.DataFrame:
 
     cols = ["unit", "cycle", "RUL"] + feat_names
     return pd.DataFrame(rows, columns=cols)
-
-
-def load_n_cmapss(
-    root: str | Path,
-    filename: str = "N-CMAPSS_DS01-005.h5",
-    seq_len: int = 20,
-    rul_cap: float = 100.0,
-):
-    root = Path(root)
-    path = root / filename
-    if not path.exists():
-        # fall back to first available h5
-        candidates = sorted(root.glob("N-CMAPSS_DS*.h5"))
-        if not candidates:
-            raise FileNotFoundError(f"No N-CMAPSS h5 files in {root}")
-        path = candidates[0]
-        filename = path.name
-
-    train_df = _cycle_aggregate(path, "dev")
-    test_df = _cycle_aggregate(path, "test")
-    if rul_cap is not None:
-        train_df["RUL"] = np.minimum(train_df["RUL"], rul_cap)
-        test_df["RUL"] = np.minimum(test_df["RUL"], rul_cap)
-
-    feature_cols = [c for c in train_df.columns if c not in ("unit", "cycle", "RUL")]
-
-    units = train_df["unit"].unique()
-    rng = np.random.default_rng(42)
-    rng.shuffle(units)
-    n_val = max(1, int(0.2 * len(units)))
-    val_units = set(units[:n_val])
-    train_units = set(units[n_val:])
-
-    X_tr, y_tr, _ = build_windows_from_units(
-        train_df.loc[train_df["unit"].isin(train_units)],
-        feature_cols,
-        "RUL",
-        seq_len=seq_len,
-        last_only=False,
-    )
-    X_va, y_va, _ = build_windows_from_units(
-        train_df.loc[train_df["unit"].isin(val_units)],
-        feature_cols,
-        "RUL",
-        seq_len=seq_len,
-        last_only=False,
-    )
-    X_te, y_te, _ = build_windows_from_units(
-        test_df, feature_cols, "RUL", seq_len=seq_len, last_only=True
-    )
-
-    X_tr, (X_va, X_te), _ = fit_scale_windows(X_tr, [X_va, X_te])
-    return {
-        "name": f"N-CMAPSS-{filename.replace('N-CMAPSS_', '').replace('.h5', '')}",
-        "task": "regression",
-        "tol": 10.0,
-        "X_train": X_tr,
-        "y_train": y_tr.astype(np.float32),
-        "X_val": X_va,
-        "y_val": y_va.astype(np.float32),
-        "X_test": X_te,
-        "y_test": y_te.astype(np.float32),
-    }

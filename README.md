@@ -8,7 +8,17 @@ End-to-end ML experiments on CMAPSS, PHM08, N-CMAPSS, and SCANIA Component X, wi
 - `CMAPSS/`, `PHM08/`, `N-CMAPSS/`, `SCANIA-Component-X/`, `alfa-dataset-tools/`
 - See `DATASETS.md` for what is in git vs download-only (N-CMAPSS `.h5`)
 
-## Setup
+Evaluation uses a **continuous sliding window** (every overlapping window, step 1),
+scores every test window (plus the classic last-window benchmark where valid), runs
+3 seeds, and always reports trivial baselines. Details: `ml_pipeline/README.md`.
+
+## Run on Google Colab (T4 GPU)
+
+Open [`colab_run.ipynb`](colab_run.ipynb) in Colab, set Runtime → Change runtime type → **T4 GPU**,
+and run all cells. It clones this repo, pulls the LFS data, installs dependencies, runs every
+experiment and (optionally) saves results to Google Drive.
+
+## Local setup
 
 ```bash
 python3 -m venv .venv

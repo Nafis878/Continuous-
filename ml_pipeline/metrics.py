@@ -9,6 +9,7 @@ from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
     r2_score,
+    recall_score,
 )
 
 
@@ -44,45 +45,6 @@ def rul_tolerance_accuracy(y_true, y_pred, tol: float = 10.0) -> float:
     return float(np.mean(np.abs(y_true - y_pred) <= tol))
 
 
-def rul_bin_accuracy(y_true, y_pred, bins=(0, 30, 60, 125, 1e9)) -> float:
-    """Accuracy after discretizing continuous RUL into health-stage bins."""
-    y_true = np.asarray(y_true, dtype=float).ravel()
-    y_pred = np.asarray(y_pred, dtype=float).ravel()
-    true_bins = np.digitize(y_true, bins[1:-1], right=False)
-    pred_bins = np.digitize(y_pred, bins[1:-1], right=False)
-    return float(accuracy_score(true_bins, pred_bins))
-
-
-def regression_report(y_true, y_pred, tol: float = 10.0) -> dict:
-    y_true = np.asarray(y_true, dtype=float).ravel()
-    y_pred = np.asarray(y_pred, dtype=float).ravel()
-    rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
-    mae = float(mean_absolute_error(y_true, y_pred))
-    acc_tol = rul_tolerance_accuracy(y_true, y_pred, tol=tol)
-    acc_bin = rul_bin_accuracy(y_true, y_pred)
-    return {
-        "task": "regression",
-        "rmse": rmse,
-        "mae": mae,
-        "accuracy": acc_tol,  # primary accuracy for ranking
-        "accuracy_tol": acc_tol,
-        "accuracy_bin": acc_bin,
-        "tol": tol,
-    }
-
-
-def classification_report_metrics(y_true, y_pred) -> dict:
-    y_true = np.asarray(y_true).ravel()
-    y_pred = np.asarray(y_pred).ravel()
-    return {
-        "task": "classification",
-        "accuracy": float(accuracy_score(y_true, y_pred)),
-        "f1_macro": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
-        "rmse": None,
-        "mae": None,
-    }
-
-
 # IDA 2024 SCANIA Component X misclassification costs (Cost_actual_predicted).
 # Diagonal = 0. Missing off-diagonals filled from challenge PDF.
 SCANIA_COST = np.array(
@@ -105,8 +67,6 @@ def scania_total_cost(y_true, y_pred, cost: np.ndarray = SCANIA_COST) -> float:
 
 def scania_metrics(y_true, y_pred) -> dict:
     """SCANIA family metrics: challenge cost (primary), macro-F1, recalls, accuracy."""
-    from sklearn.metrics import recall_score
-
     y_true = np.asarray(y_true, dtype=int).ravel()
     y_pred = np.asarray(y_pred, dtype=int).ravel()
     recalls = recall_score(

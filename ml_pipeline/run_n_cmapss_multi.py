@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
-"""Expand N-CMAPSS coverage: compare models across multiple DS files (RUL metrics)."""
+"""
+N-CMAPSS across multiple DS files (RUL metrics), continuous sliding window.
+
+Test units run to failure, so only continuous scoring (every test window) is
+meaningful; the old last-window protocol always had RUL == 0 targets.
+Set NCMAPSS_DIR to the folder holding the .h5 files (e.g. on Google Drive).
+"""
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-import time
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from datasets.ablation_data import load_raw_n_cmapss  # noqa: E402
-from run_family_comparison import make_models, pack_to_arrays  # noqa: E402
-from metrics import rul_family_metrics  # noqa: E402
+from run_family_comparison import SEEDS, evaluate_rul_dataset, pack_to_arrays, summarize_seeds, RUL_COLS  # noqa: E402
 
-# Prefer intact files; skip known truncated DS08d
+# DS08d is known to be truncated in some downloads -> not included by default
 DATASETS = [
     "N-CMAPSS_DS01-005.h5",
     "N-CMAPSS_DS02-006.h5",
@@ -29,65 +33,45 @@ DATASETS = [
 
 
 def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--seeds", type=int, nargs="+", default=SEEDS)
+    ap.add_argument("--files", nargs="+", default=DATASETS)
+    args = ap.parse_args()
+
     out = ROOT / "results" / "family_comparison"
     out.mkdir(parents=True, exist_ok=True)
     rows = []
-    for fname in DATASETS:
+    for fname in args.files:
         print(f"\n===== {fname} =====", flush=True)
         try:
             pack = load_raw_n_cmapss(filename=fname)
-            bundle = pack_to_arrays(pack)
-        except Exception as e:
-            print(f"  skip: {e}")
+        except (FileNotFoundError, OSError) as exc:
+            print(f"  skip: {exc}")
             continue
-        print(
-            f"  units train/val/test="
-            f"{pack['train_df']['unit'].nunique()}/"
-            f"{pack['val_df']['unit'].nunique()}/"
-            f"{pack['test_df']['unit'].nunique()}  "
-            f"n_test_windows={len(bundle['y_test'])}"
-        )
-        for name, model in make_models("regression", hard=False).items():
-            t0 = time.time()
-            print(f"  -> {name} ...", flush=True)
-            model.fit(bundle["X_train"], bundle["y_train"], bundle["X_val"], bundle["y_val"])
-            pred = np.maximum(model.predict(bundle["X_test"]), 0.0)
-            m = rul_family_metrics(bundle["y_test"], pred)
-            m.update(
-                {
-                    "dataset": bundle["name"],
-                    "source_file": fname,
-                    "model": name,
-                    "seconds": round(time.time() - t0, 2),
-                    "status": "ok",
-                }
-            )
-            print(f"     RMSE={m['rmse']:.3f} MAE={m['mae']:.3f} PHM={m['phm_score']:.1f}")
-            rows.append(m)
+        bundle = pack_to_arrays(pack)
+        for seed in args.seeds:
+            for r in evaluate_rul_dataset(bundle, seed=seed):
+                r["source_file"] = fname
+                rows.append(r)
+        pd.DataFrame(rows).to_csv(out / "n_cmapss_multi_metrics.csv", index=False)
+
+    if not rows:
+        print("No N-CMAPSS files found; nothing to report. See DATASETS.md / NCMAPSS_DIR.")
+        return
 
     df = pd.DataFrame(rows)
-    df["rank"] = df.groupby("dataset")["rmse"].rank(method="min", ascending=True)
-    df = df.sort_values(["dataset", "rank"])
     df.to_csv(out / "n_cmapss_multi_metrics.csv", index=False)
-    winners = (
-        df.sort_values(["dataset", "rank"]).groupby("dataset", as_index=False).first()[
-            ["dataset", "source_file", "model", "rmse", "mae", "phm_score", "n_test"]
-        ]
-    )
+    summ = summarize_seeds(df, "rmse", RUL_COLS)
+    summ.to_csv(out / "n_cmapss_multi_summary.csv", index=False)
     summary = {
-        "primary_metric": "rmse",
-        "files": DATASETS,
-        "winners": winners.to_dict(orient="records"),
-        "pooled_mean_rmse_by_model": df.groupby("model")["rmse"]
-        .mean()
-        .sort_values()
-        .to_dict(),
+        "primary_metric": "continuous rmse (mean over seeds)",
+        "seeds": args.seeds,
+        "files": args.files,
+        "winners": summ[summ["rank"] == 1].to_dict(orient="records"),
+        "pooled_mean_rmse_by_model": df.groupby("model")["rmse"].mean().sort_values().to_dict(),
     }
-    (out / "n_cmapss_multi_summary.json").write_text(json.dumps(summary, indent=2))
-    print("\n=== Winners per DS file ===")
-    print(winners.to_string(index=False))
-    print("\n=== Mean RMSE across files ===")
-    print(df.groupby("model")["rmse"].mean().sort_values())
+    (out / "n_cmapss_multi_summary.json").write_text(json.dumps(summary, indent=2, default=str))
+    print(summ[["dataset", "model", "rmse_mean", "rmse_std", "r2_mean", "rank"]].to_string(index=False))
     print(f"Saved -> {out}")
 
 

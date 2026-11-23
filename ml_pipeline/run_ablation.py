@@ -49,7 +49,11 @@ BASELINE = {
 
 
 def build_windows_pack(pack: dict, feature_cols: list[str], seq_len: int):
-    """Build train/val/test windows. Test uses last window per unit only."""
+    """Build continuous sliding windows (step 1) for train/val/test.
+
+    Test is scored continuously: every window over each test unit's history
+    (full trajectories via test_cont_df when the pack provides them).
+    """
     stride = int(pack.get("stride_train", 1))
     max_per = pack.get("max_windows_per_vehicle")
 
@@ -65,11 +69,11 @@ def build_windows_pack(pack: dict, feature_cols: list[str], seq_len: int):
         )
         return X, y, units
 
-    # For large vehicle datasets, validate on last window/unit (still unit-held-out)
+    # SCANIA val vehicles are pre-cut before repair; validate on last window per cut
     val_last_only = max_per is not None
     X_tr, y_tr, u_tr = _windows(pack["train_df"], last_only=False)
     X_va, y_va, u_va = _windows(pack["val_df"], last_only=val_last_only)
-    X_te, y_te, u_te = _windows(pack["test_df"], last_only=bool(pack.get("test_last_only", True)))
+    X_te, y_te, u_te = _windows(pack.get("test_cont_df", pack["test_df"]), last_only=False)
 
     # Optional per-vehicle train window subsample (SCANIA) — by unit, after windowing
     if max_per is not None:
@@ -85,7 +89,6 @@ def build_windows_pack(pack: dict, feature_cols: list[str], seq_len: int):
 
     if stride > 1:
         X_tr, y_tr = X_tr[::stride], y_tr[::stride]
-        X_va, y_va = X_va[::stride], y_va[::stride]
 
     return (
         X_tr.astype(np.float32),

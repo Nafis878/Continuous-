@@ -67,10 +67,16 @@ class LSTMModel:
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.model: LSTMNet | None = None
         self.input_dim: int | None = None
+        # Regression targets are standardized for training (raw RUL of 0-125
+        # with MSE made the LSTM collapse to predicting the mean on hard sets).
+        self.y_mean: float = 0.0
+        self.y_std: float = 1.0
 
     def _set_seed(self):
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(self.seed)
 
     def fit(self, X: np.ndarray, y: np.ndarray, X_val=None, y_val=None):
         self._set_seed()
@@ -98,6 +104,9 @@ class LSTMModel:
             loss_fn = nn.CrossEntropyLoss(weight=weight)
         else:
             y = y.astype(np.float32).reshape(-1, 1)
+            self.y_mean = float(y.mean())
+            self.y_std = float(y.std()) or 1.0
+            y = ((y - self.y_mean) / self.y_std).astype(np.float32)
             out_dim = 1
             loss_fn = nn.MSELoss()
 
@@ -110,7 +119,8 @@ class LSTMModel:
         ).to(self.device)
 
         ds = TensorDataset(torch.from_numpy(X), torch.from_numpy(y))
-        loader = DataLoader(ds, batch_size=self.batch_size, shuffle=True)
+        gen = torch.Generator().manual_seed(self.seed)
+        loader = DataLoader(ds, batch_size=self.batch_size, shuffle=True, generator=gen)
 
         val_loader = None
         if X_val is not None and y_val is not None:
@@ -120,6 +130,7 @@ class LSTMModel:
                 yv = yv.astype(np.int64)
             else:
                 yv = yv.astype(np.float32).reshape(-1, 1)
+                yv = ((yv - self.y_mean) / self.y_std).astype(np.float32)
             val_loader = DataLoader(
                 TensorDataset(torch.from_numpy(Xv), torch.from_numpy(yv)),
                 batch_size=self.batch_size,
@@ -184,5 +195,5 @@ class LSTMModel:
                 if self.task == "classification":
                     outs.append(pred.argmax(dim=1).cpu().numpy())
                 else:
-                    outs.append(pred.cpu().numpy().ravel())
+                    outs.append(pred.cpu().numpy().ravel() * self.y_std + self.y_mean)
         return np.concatenate(outs, axis=0)
