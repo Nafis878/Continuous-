@@ -7,7 +7,6 @@
 | CMAPSS | `CMAPSS/` | Full NASA C-MAPSS text files + zip |
 | PHM08 | `PHM08/` | Challenge train/test text + zip |
 | SCANIA Component X | `SCANIA-Component-X/` | Specs, labels, TTE, operational CSVs (large CSVs via Git LFS) |
-| ALFA tools | `alfa-dataset-tools/` | Tooling only (no flight data files locally) |
 | Pipeline | `ml_pipeline/` | End-to-end LSTM/family comparison code + results |
 
 ## Not in git (too large for GitHub)

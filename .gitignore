@@ -13,11 +13,6 @@ __pycache__/
 *.swp
 .DS_Store
 
-# Nested git metadata (tools vendored into this monorepo)
-alfa-dataset-tools/.git/
-alfa-dataset-tools/.git
-alfa-dataset-tools/.git.bak.nested/
-
 # N-CMAPSS raw HDF5 files are multi-GB (2–3.5GB each, ~28GB total).
 # GitHub rejects files >100MB without LFS, and free LFS quotas cannot hold them.
 # See DATASETS.md for download instructions. Keep notebooks/PDFs tracked.
