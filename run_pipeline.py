@@ -282,5 +282,35 @@ def parse_args(argv=None):
     return a
 
 
+DRIVE_MOUNT = "/content/drive"
+
+
+def check_drive_paths(args) -> str | None:
+    """
+    Refuse to write into /content/drive/... unless Google Drive is actually mounted there.
+    Otherwise results would silently go to a local folder (lost on reset) and Colab's
+    drive.mount() would later fail with "Mountpoint must not already contain files".
+    """
+    paths = [p for p in (args.out, args.ncmapss_dir) if p]
+    if not any(str(p).replace("\\", "/").startswith(DRIVE_MOUNT + "/") for p in paths):
+        return None
+    if os.path.ismount(DRIVE_MOUNT):
+        return None
+    return (
+        f"--out / --ncmapss-dir point into {DRIVE_MOUNT}, but Google Drive is NOT mounted there.\n"
+        "Run this in a Colab cell first, then re-run the pipeline:\n\n"
+        "    import os, shutil\n"
+        "    from google.colab import drive\n"
+        f"    if not os.path.ismount('{DRIVE_MOUNT}'):\n"
+        f"        shutil.rmtree('{DRIVE_MOUNT}', ignore_errors=True)  # local leftover, not your Drive\n"
+        f"        drive.mount('{DRIVE_MOUNT}')\n"
+    )
+
+
 if __name__ == "__main__":
-    sys.exit(Pipeline(parse_args()).main())
+    _args = parse_args()
+    _err = None if _args.dry_run else check_drive_paths(_args)
+    if _err:
+        print("ERROR: " + _err, file=sys.stderr)
+        sys.exit(2)
+    sys.exit(Pipeline(_args).main())
