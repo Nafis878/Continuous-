@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -40,6 +41,8 @@ from sklearn.preprocessing import StandardScaler
 ROOT = Path(__file__).resolve().parent
 WORKSPACE = ROOT.parent
 sys.path.insert(0, str(ROOT))
+# Results root; run_pipeline.py points this at its --out folder (e.g. a mounted Google Drive)
+RESULTS = Path(os.environ.get("CRB_RESULTS_DIR") or ROOT / "results")
 
 from datasets.ablation_data import (  # noqa: E402
     load_raw_cmapss,
@@ -72,6 +75,8 @@ def _scale_train_only(X_tr, others):
     scaler = StandardScaler().fit(X_tr.reshape(-1, f))
 
     def tf(X):
+        if len(X) == 0:  # e.g. N-CMAPSS has no last-window test set
+            return X.astype(np.float32)
         return scaler.transform(X.reshape(-1, f)).reshape(X.shape).astype(np.float32)
 
     return tf(X_tr), [tf(X) for X in others]
@@ -265,7 +270,7 @@ def main():
     )
     args = ap.parse_args()
 
-    out_dir = ROOT / "results" / "family_comparison"
+    out_dir = RESULTS / "family_comparison"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     rul_bundles = [pack_to_arrays(load_raw_cmapss(fd)) for fd in ("FD001", "FD002", "FD003", "FD004")]

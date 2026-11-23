@@ -29,7 +29,7 @@
 
 ## Next
 1. Full benchmark on Colab T4 (`colab_run.ipynb`), 3 seeds → first official leaderboard.
-2. N-CMAPSS (.h5, ~28 GB) is not on GitHub → on Colab, place files in `My Drive/N-CMAPSS/` of the mounted account.
+2. N-CMAPSS is downloaded automatically from NASA (`run_pipeline.py --with-ncmapss` / `--all`).
 3. Tune TCT weights (λ, late penalty) on validation if CATT+TCT does not beat CATT on RMSE; report
    the TCE / RMSE≤30 trade-off honestly either way.
 

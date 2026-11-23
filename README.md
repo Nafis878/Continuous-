@@ -17,39 +17,55 @@ Full specification: **[BENCHMARK.md](BENCHMARK.md)**.
 
 1. Open [`colab_run.ipynb`](colab_run.ipynb) in Colab (File → Open notebook → GitHub, or upload it).
 2. Runtime → Change runtime type → **T4 GPU**.
-3. Run all cells. The code comes straight from this GitHub repo. When Colab asks to mount Google
-   Drive, pick **any Google account** — results are saved to `My Drive/CRB/results` in *that*
-   account (folder name configurable via `DRIVE_FOLDER`). Every finished run is saved immediately,
-   so after a disconnect just Run all again and it resumes. Without Drive (`SAVE_TO_DRIVE = False`)
-   results stay on the Colab machine and are downloaded as a zip.
+3. Run all cells and approve the Google Drive pop-up with **any Google account**. The code comes
+   straight from this GitHub repo; **everything** (leaderboard, every run, all studies, logs, status)
+   is saved in *that* account's Drive under `My Drive/CRB/results` (folder name: `DRIVE_FOLDER`).
+   Every finished run is saved immediately, so after a disconnect just Run all again and it resumes.
+
+With `RUN_EVERYTHING = True` (default) the notebook runs `run_pipeline.py --all`: N-CMAPSS is
+downloaded from NASA automatically (~15 GB, streamed, CRC-checked), then the smoke test, the full
+benchmark on CMAPSS FD001–FD004 + PHM08 + N-CMAPSS DS01/02/03/05/07, and all studies.
 
 ## One-command pipeline scripts
 
 `run_pipeline.py` (any OS) and `run_pipeline.sh` (Colab / Linux / macOS) run everything in order:
-environment check → smoke test (stops early if anything fails) → full benchmark → optional studies
-→ summary. Output goes to one folder (`--out`) with `benchmark/`, `studies/`, `logs/` (one log per
-stage) and `pipeline_status.json`. Re-running resumes the benchmark.
+environment check → N-CMAPSS download (optional) → smoke test (stops early if anything fails) →
+full benchmark → optional studies → summary. Everything goes to one folder (`--out`) with
+`benchmark/`, `studies/`, `logs/` (one log per stage) and `pipeline_status.json`. Re-running resumes.
 
 ```bash
 python run_pipeline.py --quick                            # ~2 min check of every model
 python run_pipeline.py                                    # smoke test + full benchmark (3 seeds)
 python run_pipeline.py --out /content/drive/MyDrive/CRB   # Colab: results in the mounted Drive
 python run_pipeline.py --models CATT+TCT CATT TCN --datasets FD001 FD004
-python run_pipeline.py --with-studies --with-scania --with-ablation   # everything
-python run_pipeline.py --dry-run --with-scania            # show the plan only
+python run_pipeline.py --all                              # everything incl. N-CMAPSS download
+python run_pipeline.py --dry-run --all                    # show the plan only
 bash run_pipeline.sh --help                               # all options
 ```
 
-In Colab (after mounting Drive) a single cell is enough:
+In Colab, two cells are enough (results land in the Drive of whichever account you mount):
 
 ```python
-!git clone -q https://github.com/Nafis878/Continuous-.git /content/Continuous
+from google.colab import drive
+drive.mount("/content/drive")
+```
+
+```python
+import os
+os.environ["GIT_LFS_SKIP_SMUDGE"] = "1"   # LFS data is fetched later only if needed
+if not os.path.isdir("/content/Continuous"):
+    !git clone -q https://github.com/Nafis878/Continuous-.git /content/Continuous
+else:
+    !git -C /content/Continuous pull -q
 %cd /content/Continuous
-!python run_pipeline.py --install --out /content/drive/MyDrive/CRB
+!python run_pipeline.py --install --all --out /content/drive/MyDrive/CRB/results --ncmapss-dir /content/N-CMAPSS
 ```
 
 | Option | Effect |
 |---|---|
+| `--all` | everything: `--with-ncmapss --with-studies --with-scania --with-ablation` |
+| `--with-ncmapss` | download N-CMAPSS DS01/02/03/05/07 from NASA (~15 GB; skipped if already present) |
+| `--ncmapss-dir` | where N-CMAPSS lives / is downloaded (default `N-CMAPSS/data_set`) |
 | `--quick` | environment + smoke test only |
 | `--seeds`, `--datasets`, `--models`, `--epochs` | passed to the benchmark |
 | `--with-studies` | condition clustering (FD002/FD004) + N-CMAPSS multi-file study |
@@ -75,7 +91,7 @@ Results: `ml_pipeline/results/benchmark/LEADERBOARD.md` (+ `runs.csv`, `leaderbo
 |---|---|---|
 | CMAPSS FD001–FD004 | yes (`CMAPSS/`) | official train/test + RUL files |
 | PHM08 | yes (`PHM08/`) | official test RUL hidden → held-out train units |
-| N-CMAPSS DS01/02/03/05/07 | no (~28 GB, too large for GitHub) | Colab: put `.h5` files in `My Drive/N-CMAPSS/` of the mounted account. Local: `N-CMAPSS/data_set/`. Skipped if absent |
+| N-CMAPSS DS01/02/03/05/07 | no (too large for GitHub) | downloaded automatically from NASA by `run_pipeline.py --with-ncmapss` / `--all` (~15 GB); skipped if absent |
 | SCANIA Component X | yes (Git LFS) | used by the separate classification study, not by CRB |
 
 See [DATASETS.md](DATASETS.md).

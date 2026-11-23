@@ -5,18 +5,22 @@ Run the whole pipeline with one command.
 Stages (in order)
 -----------------
   1. env        - Python / torch / GPU / dependency check (optionally pip install)
-  2. smoke      - Continuous RUL Benchmark quick test: every model, 1 epoch (fails fast)
-  3. benchmark  - full Continuous RUL Benchmark (CRB): all datasets x models x seeds
-  4. studies    - optional extra experiments:
+  2. data       - --with-ncmapss: download N-CMAPSS DS01/02/03/05/07 (~15 GB) from NASA,
+                  streamed and CRC-checked; skipped if the files are already there
+  3. smoke      - Continuous RUL Benchmark quick test: every model, 1 epoch (fails fast)
+  4. benchmark  - full Continuous RUL Benchmark (CRB): all datasets x models x seeds
+  5. studies    - optional extra experiments:
                     --with-studies   condition clustering (FD002/FD004) + N-CMAPSS multi-file
                     --with-scania    SCANIA classification (family comparison + cost tuning)
                     --with-ablation  LSTM one-factor ablations (uses SCANIA data too)
                   SCANIA data (Git LFS, ~1.7 GB) is pulled automatically when needed.
-  5. summary    - status of every stage -> OUT/pipeline_status.json
+  6. summary    - status of every stage -> OUT/pipeline_status.json
+
+  --all = --with-ncmapss --with-studies --with-scania --with-ablation (everything)
 
 Everything is written under --out (default: ml_pipeline/results/pipeline):
   OUT/benchmark/   LEADERBOARD.md, runs.csv, leaderboard*.csv   (resumable)
-  OUT/studies/     results of the optional studies
+  OUT/studies/     results of the optional studies (written there directly)
   OUT/logs/        one log file per stage
 Re-running the same command resumes the benchmark (finished runs are skipped).
 
@@ -26,7 +30,8 @@ Examples
   python run_pipeline.py --quick                           # ~2 min check of everything
   python run_pipeline.py --out /content/drive/MyDrive/CRB  # results on a mounted Google Drive
   python run_pipeline.py --models CATT+TCT CATT TCN --datasets FD001 FD004
-  python run_pipeline.py --with-studies --with-scania      # everything
+  python run_pipeline.py --all --out /content/drive/MyDrive/CRB   # everything incl. N-CMAPSS
+  python run_pipeline.py --with-ncmapss --ncmapss-dir /content/drive/MyDrive/CRB/N-CMAPSS  # keep data in Drive
   python run_pipeline.py --dry-run --with-scania           # print the plan only
 """
 
@@ -44,6 +49,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent
 ML = REPO / "ml_pipeline"
+DEFAULT_NCMAPSS_DIR = REPO / "N-CMAPSS" / "data_set"
 SCANIA_DATA = REPO / "SCANIA-Component-X" / "data"
 SCANIA_LFS = ["train_operational_readouts.csv", "validation_operational_readouts.csv", "test_operational_readouts.csv"]
 
@@ -65,6 +71,9 @@ class Pipeline:
         self.logs = self.out / "logs"
         self.status: list[dict] = []
         self.py = sys.executable
+        self.ncmapss_dir = Path(args.ncmapss_dir).resolve() if args.ncmapss_dir else DEFAULT_NCMAPSS_DIR
+        # every subprocess writes study results under OUT/studies and finds N-CMAPSS here
+        self.child_env = {"CRB_RESULTS_DIR": str(self.out / "studies"), "NCMAPSS_DIR": str(self.ncmapss_dir)}
 
     # ------------------------------------------------------------------ #
     def run(self, name: str, cmd: list[str], env: dict | None = None) -> bool:
@@ -75,7 +84,8 @@ class Pipeline:
             return True
         self.logs.mkdir(parents=True, exist_ok=True)
         t0 = time.time()
-        full_env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8", **(env or {})}
+        full_env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8",
+                    **self.child_env, **(env or {})}
         with open(self.logs / f"{name}.log", "w", encoding="utf-8", errors="replace") as log:
             proc = subprocess.Popen(cmd, cwd=REPO, env=full_env, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
@@ -95,7 +105,7 @@ class Pipeline:
 
     # ------------------------------------------------------------------ #
     def stage_env(self) -> bool:
-        banner("1/5  Environment")
+        banner("1/6  Environment")
         if self.args.install and not self.args.dry_run:
             if not self.run("pip_install", [self.py, "-m", "pip", "install", "-q", "-r", str(ML / "requirements.txt")]):
                 return False
@@ -119,10 +129,19 @@ class Pipeline:
             print(f"GPU     {torch.cuda.get_device_name(0)} (CUDA {torch.version.cuda})")
         else:
             print("GPU     none -> running on CPU (much slower; on Colab: Runtime -> Change runtime type -> T4 GPU)")
-        nc = os.environ.get("NCMAPSS_DIR")
-        print(f"N-CMAPSS dir: {nc or 'N-CMAPSS/data_set (default)'}  (datasets skipped if no .h5 files)")
+        n_h5 = len(list(self.ncmapss_dir.glob("N-CMAPSS_*.h5"))) if self.ncmapss_dir.exists() else 0
+        print(f"N-CMAPSS {self.ncmapss_dir}  ({n_h5} .h5 file(s) present"
+              f"{'; will download' if self.args.with_ncmapss else '; N-CMAPSS skipped unless present'})")
         self.status.append({"stage": "env", "status": "ok", "gpu": torch.cuda.is_available()})
         return True
+
+    def stage_data(self) -> bool:
+        banner("2/6  Data (N-CMAPSS)")
+        if not self.args.with_ncmapss:
+            self.skip("ncmapss_download", "not requested (--with-ncmapss / --all)")
+            return True
+        return self.run("ncmapss_download", [self.py, str(ML / "datasets" / "ncmapss_download.py"),
+                                             "--dest", str(self.ncmapss_dir)])
 
     def bench_cmd(self, out: Path, quick: bool) -> list[str]:
         cmd = [self.py, str(ML / "run_benchmark.py"), "--out", str(out)]
@@ -139,14 +158,14 @@ class Pipeline:
         return cmd
 
     def stage_smoke(self) -> bool:
-        banner("2/5  Smoke test (every model, 1 epoch, small subsets)")
+        banner("3/6  Smoke test (every model, 1 epoch, small subsets)")
         if self.args.skip_smoke and not self.args.quick:
             self.skip("smoke", "--skip-smoke")
             return True
         return self.run("smoke", self.bench_cmd(self.out / "smoke", quick=True))
 
     def stage_benchmark(self) -> bool:
-        banner("3/5  Continuous RUL Benchmark (CRB)")
+        banner("4/6  Continuous RUL Benchmark (CRB)")
         if self.args.quick:
             self.skip("benchmark", "--quick (smoke test only)")
             return True
@@ -175,16 +194,8 @@ class Pipeline:
             self.run("lfs_pull", ["git", "lfs", "pull", "--include", "SCANIA-Component-X/data/*"])
         return ok and (self.args.dry_run or self.scania_data_ready())
 
-    def copy_results(self, sub: str):
-        src = ML / "results" / sub
-        if self.args.dry_run or not src.exists():
-            return
-        dst = self.out / "studies" / sub
-        shutil.copytree(src, dst, dirs_exist_ok=True)
-        print(f"copied {src} -> {dst}")
-
     def stage_studies(self) -> bool:
-        banner("4/5  Optional studies")
+        banner("5/6  Optional studies")
         a = self.args
         if not (a.with_studies or a.with_scania or a.with_ablation):
             self.skip("studies", "none requested (--with-studies / --with-scania / --with-ablation)")
@@ -196,9 +207,7 @@ class Pipeline:
         ok = True
         if a.with_studies:
             ok &= self.run("condition_rul", [self.py, str(ML / "run_condition_rul.py"), *seeds])
-            self.copy_results("family_comparison")
             ok &= self.run("n_cmapss_multi", [self.py, str(ML / "run_n_cmapss_multi.py"), *seeds])
-            self.copy_results("family_comparison")
         if a.with_scania or a.with_ablation:
             if not self.ensure_scania():
                 self.status.append({"stage": "scania_data", "status": "failed: could not fetch LFS data"})
@@ -206,15 +215,13 @@ class Pipeline:
         if a.with_scania:
             ok &= self.run("family_comparison", [self.py, str(ML / "run_family_comparison.py"), *seeds])
             ok &= self.run("scania_cost_tune", [self.py, str(ML / "run_scania_cost_tune.py"), *seeds])
-            self.copy_results("family_comparison")
         if a.with_ablation:
             ok &= self.run("ablation", [self.py, str(ML / "run_ablation.py")])
-            self.copy_results("ablation")
         return bool(ok)
 
     # ------------------------------------------------------------------ #
     def summary(self, t0: float) -> int:
-        banner("5/5  Summary")
+        banner("6/6  Summary")
         failed = [s for s in self.status if str(s["status"]).startswith("failed")]
         for s in self.status:
             mins = f"{s['minutes']:.1f} min" if "minutes" in s else ""
@@ -238,6 +245,9 @@ class Pipeline:
         t0 = time.time()
         if not self.stage_env():
             return self.summary(t0)
+        if not self.stage_data():
+            print("N-CMAPSS download failed -> stopping. See logs/ncmapss_download.log (re-run to resume).")
+            return self.summary(t0)
         if not self.stage_smoke():
             print("Smoke test failed -> stopping before the long benchmark. See logs/smoke.log.")
             return self.summary(t0)
@@ -256,13 +266,20 @@ def parse_args(argv=None):
     ap.add_argument("--models", nargs="+", help="benchmark models (default: all)")
     ap.add_argument("--epochs", type=int, help="override max epochs for deep models (default 40)")
     ap.add_argument("--skip-smoke", action="store_true", help="skip the smoke test")
+    ap.add_argument("--all", action="store_true",
+                    help="everything: --with-ncmapss --with-studies --with-scania --with-ablation")
+    ap.add_argument("--with-ncmapss", action="store_true", help="download N-CMAPSS (~15 GB) and include it")
+    ap.add_argument("--ncmapss-dir", help=f"where N-CMAPSS .h5 files live / are downloaded (default {DEFAULT_NCMAPSS_DIR})")
     ap.add_argument("--with-studies", action="store_true", help="condition clustering + N-CMAPSS multi-file")
     ap.add_argument("--with-scania", action="store_true", help="SCANIA classification studies (pulls LFS data)")
     ap.add_argument("--with-ablation", action="store_true", help="LSTM ablation study (pulls LFS data)")
     ap.add_argument("--keep-going", action="store_true", help="run studies even if the benchmark failed")
     ap.add_argument("--install", action="store_true", help="pip install -r ml_pipeline/requirements.txt first")
     ap.add_argument("--dry-run", action="store_true", help="print the commands without running them")
-    return ap.parse_args(argv)
+    a = ap.parse_args(argv)
+    if a.all:
+        a.with_ncmapss = a.with_studies = a.with_scania = a.with_ablation = True
+    return a
 
 
 if __name__ == "__main__":

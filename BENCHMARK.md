@@ -21,7 +21,7 @@ while still reporting the classic last-window RMSE / PHM score for comparison wi
 
 | Item | Specification |
 |---|---|
-| Datasets | CMAPSS FD001, FD002, FD003, FD004; PHM08; N-CMAPSS DS01, DS02, DS03, DS05, DS07 (optional, data not in git) |
+| Datasets | CMAPSS FD001, FD002, FD003, FD004; PHM08; N-CMAPSS DS01, DS02, DS03, DS05, DS07 (not in git; downloaded from NASA by `run_pipeline.py --with-ncmapss`) |
 | Splits | unit-level, seed 42 (`datasets/ablation_data.py`). CMAPSS: official test set; 15% of train units → validation. PHM08: official test RUL is hidden → 20% of train units held out as test, 15% → validation. N-CMAPSS: official `dev`/`test`; 20% of dev units → validation |
 | Windows | continuous sliding windows, **step 1**; length 30 (CMAPSS, PHM08) / 20 (N-CMAPSS); units shorter than the window are left-padded with their first row |
 | Features | FD001/FD003: 3 settings + 14 informative sensors (17). FD002/FD004/PHM08: all 24. N-CMAPSS: cycle-averaged W (4) + X_s (14) |
@@ -97,8 +97,8 @@ python ml_pipeline/run_benchmark.py --out results/crb   # custom output dir (res
 On Google Colab use `colab_run.ipynb` (T4 GPU): code comes from this GitHub repo and results go
 to the Google Drive of whoever runs it (`My Drive/CRB/results`). Runs are appended to `runs.csv`
 one at a time, and re-running the same command **resumes** (finished runs are skipped).
-N-CMAPSS is not on GitHub (~28 GB); on Colab it is included if the mounted Drive has
-`My Drive/N-CMAPSS/*.h5`.
+N-CMAPSS is not on GitHub; `python run_pipeline.py --all` (the notebook default) downloads the five
+benchmark files from NASA (~15 GB, streamed and CRC-checked) and includes them.
 
 Outputs (`ml_pipeline/results/benchmark/` or `--out`):
 

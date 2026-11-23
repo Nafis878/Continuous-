@@ -15,7 +15,18 @@
 
 GitHub file limit is 100MB (LFS free tier ≈ 1GB storage). These files are 2–3.5GB each.
 
-Place the official `.h5` files here after download:
+**Automatic download** (recommended) — streams NASA's archive once, extracts only the benchmark
+files (DS01, DS02, DS03, DS05, DS07; ~15 GB), verifies CRCs, skips files already present:
+
+```bash
+python run_pipeline.py --with-ncmapss                       # as part of the pipeline
+python ml_pipeline/datasets/ncmapss_download.py --dest N-CMAPSS/data_set   # download only
+python ml_pipeline/datasets/ncmapss_download.py --dest N-CMAPSS/data_set --files all   # all files
+```
+
+Source archive: `https://phm-datasets.s3.amazonaws.com/NASA/17.+Turbofan+Engine+Degradation+Simulation+Data+Set+2.zip`
+
+Or place the official `.h5` files here manually:
 
 ```text
 N-CMAPSS/data_set/
@@ -30,9 +41,10 @@ Or keep them in another folder and point the pipeline at it:
 export NCMAPSS_DIR=/path/to/N-CMAPSS
 ```
 
-On Colab, `colab_run.ipynb` does this automatically when the mounted Google Drive (any account)
-contains `My Drive/N-CMAPSS/*.h5`. Without the files, N-CMAPSS is skipped and every other
-dataset still runs.
+(`run_pipeline.py --ncmapss-dir DIR` does this for you.) On Colab, `colab_run.ipynb` downloads the
+files automatically; set `KEEP_NCMAPSS_IN_DRIVE = True` to keep them in `My Drive/CRB/N-CMAPSS` of
+the mounted account (needs ~15 GB free Drive space). Without the files, N-CMAPSS is skipped and every
+other dataset still runs.
 
 Notebook and PDF documentation **are** included under `N-CMAPSS/data_set/`.
 

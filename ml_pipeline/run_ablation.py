@@ -15,6 +15,7 @@ Metrics: RMSE, MAE, R², PHM Score.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -25,6 +26,8 @@ from sklearn.preprocessing import StandardScaler
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+# Results root; run_pipeline.py points this at its --out folder (e.g. a mounted Google Drive)
+RESULTS = Path(os.environ.get("CRB_RESULTS_DIR") or ROOT / "results")
 
 from datasets.ablation_data import load_all_raw_datasets  # noqa: E402
 from datasets.sequence_utils import build_windows_from_units  # noqa: E402
@@ -387,7 +390,7 @@ def summarize(df: pd.DataFrame) -> dict:
 
 
 def main():
-    out_dir = ROOT / "results" / "ablation"
+    out_dir = RESULTS / "ablation"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print("Loading raw datasets (fixed unit splits, seed=42)...")

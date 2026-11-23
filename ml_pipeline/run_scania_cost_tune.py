@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -22,6 +23,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 WORKSPACE = ROOT.parent
 sys.path.insert(0, str(ROOT))
+# Results root; run_pipeline.py points this at its --out folder (e.g. a mounted Google Drive)
+RESULTS = Path(os.environ.get("CRB_RESULTS_DIR") or ROOT / "results")
 
 from datasets.scania import load_scania  # noqa: E402
 from metrics import SCANIA_COST, scania_metrics, scania_total_cost  # noqa: E402
@@ -60,7 +63,7 @@ def main():
     ap.add_argument("--seeds", type=int, nargs="+", default=SEEDS)
     args = ap.parse_args()
 
-    out = ROOT / "results" / "family_comparison"
+    out = RESULTS / "family_comparison"
     out.mkdir(parents=True, exist_ok=True)
 
     bundle = load_scania(

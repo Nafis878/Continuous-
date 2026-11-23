@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -24,6 +25,8 @@ from sklearn.preprocessing import StandardScaler
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+# Results root; run_pipeline.py points this at its --out folder (e.g. a mounted Google Drive)
+RESULTS = Path(os.environ.get("CRB_RESULTS_DIR") or ROOT / "results")
 
 from datasets.ablation_data import FEAT_ALL, load_raw_cmapss  # noqa: E402
 from datasets.sequence_utils import build_windows_from_units  # noqa: E402
@@ -136,7 +139,7 @@ def main():
     ap.add_argument("--seeds", type=int, nargs="+", default=SEEDS)
     args = ap.parse_args()
 
-    out = ROOT / "results" / "family_comparison"
+    out = RESULTS / "family_comparison"
     out.mkdir(parents=True, exist_ok=True)
     rows = []
     for fd in ("FD002", "FD004"):
