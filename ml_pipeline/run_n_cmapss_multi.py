@@ -4,7 +4,7 @@ N-CMAPSS across multiple DS files (RUL metrics), continuous sliding window.
 
 Test units run to failure, so only continuous scoring (every test window) is
 meaningful; the old last-window protocol always had RUL == 0 targets.
-Set NCMAPSS_DIR to the folder holding the .h5 files (e.g. on Google Drive).
+Set NCMAPSS_DIR to the folder holding the .h5 files (default: N-CMAPSS/data_set).
 """
 
 from __future__ import annotations

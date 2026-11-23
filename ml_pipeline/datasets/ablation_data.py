@@ -126,7 +126,7 @@ def load_raw_phm08(rul_cap: float = 125.0) -> dict:
 
 
 def load_raw_n_cmapss(filename: str = "N-CMAPSS_DS01-005.h5", rul_cap: float = 100.0) -> dict:
-    # NCMAPSS_DIR lets the ~28 GB .h5 files live elsewhere (e.g. Google Drive on Colab).
+    # NCMAPSS_DIR lets the ~28 GB .h5 files live in another local folder.
     root = Path(os.environ.get("NCMAPSS_DIR", WORKSPACE / "N-CMAPSS" / "data_set"))
     path = root / filename
     if not path.exists():

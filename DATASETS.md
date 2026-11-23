@@ -24,13 +24,14 @@ N-CMAPSS/data_set/
   ...
 ```
 
-Or keep them elsewhere (e.g. Google Drive on Colab) and point the pipeline at them:
+Or keep them in another local folder and point the pipeline at it:
 
 ```bash
-export NCMAPSS_DIR=/content/drive/MyDrive/N-CMAPSS
+export NCMAPSS_DIR=/path/to/N-CMAPSS
 ```
 
-Without the files, N-CMAPSS is skipped and every other dataset still runs.
+Without the files, N-CMAPSS is skipped and every other dataset still runs (this is always the
+case on Colab, which runs directly from GitHub).
 
 Notebook and PDF documentation **are** included under `N-CMAPSS/data_set/`.
 

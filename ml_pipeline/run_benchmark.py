@@ -12,7 +12,7 @@ Examples
   python ml_pipeline/run_benchmark.py --quick                      # 1-epoch smoke test
   python ml_pipeline/run_benchmark.py                              # full benchmark, 3 seeds
   python ml_pipeline/run_benchmark.py --models CATT+TCT TCN --datasets FD001 FD004
-  python ml_pipeline/run_benchmark.py --out /content/drive/MyDrive/crb   # resumable on Drive
+  python ml_pipeline/run_benchmark.py --out results/crb             # custom output dir (resumable)
 """
 
 from __future__ import annotations

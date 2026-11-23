@@ -17,9 +17,10 @@ Full specification: **[BENCHMARK.md](BENCHMARK.md)**.
 
 1. Open [`colab_run.ipynb`](colab_run.ipynb) in Colab (File → Open notebook → GitHub, or upload it).
 2. Runtime → Change runtime type → **T4 GPU**.
-3. Run all cells. The notebook clones this repo, installs dependencies, runs a 2-minute smoke test,
-   then the full benchmark, saving results to Google Drive after every run (re-run to resume after a
-   disconnect).
+3. Run all cells. Everything comes from this GitHub repo — no Google Drive or other services. The
+   notebook clones the repo, installs dependencies, runs a 2-minute smoke test, then the benchmark,
+   shows the leaderboard and downloads the results as a zip. Re-running in the same runtime resumes
+   (finished runs are skipped); use the `DATASETS` / `MODELS` settings to run in chunks.
 
 ## Run locally
 
@@ -38,7 +39,7 @@ Results: `ml_pipeline/results/benchmark/LEADERBOARD.md` (+ `runs.csv`, `leaderbo
 |---|---|---|
 | CMAPSS FD001–FD004 | yes (`CMAPSS/`) | official train/test + RUL files |
 | PHM08 | yes (`PHM08/`) | official test RUL hidden → held-out train units |
-| N-CMAPSS DS01/02/03/05/07 | no (~28 GB) | put `.h5` files in `N-CMAPSS/data_set/` or set `NCMAPSS_DIR`; skipped if absent |
+| N-CMAPSS DS01/02/03/05/07 | no (~28 GB, too large for GitHub) | local runs only: put `.h5` files in `N-CMAPSS/data_set/`; skipped if absent (always skipped on Colab) |
 | SCANIA Component X | yes (Git LFS) | used by the separate classification study, not by CRB |
 
 See [DATASETS.md](DATASETS.md).

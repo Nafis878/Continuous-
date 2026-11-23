@@ -91,11 +91,12 @@ Ranking per dataset uses mean continuous RMSE; the summary table also reports av
 python ml_pipeline/run_benchmark.py --quick        # smoke test, ~2 min on CPU
 python ml_pipeline/run_benchmark.py                # full benchmark (all models, 3 seeds)
 python ml_pipeline/run_benchmark.py --datasets FD001 FD004 --models CATT+TCT TCN
-python ml_pipeline/run_benchmark.py --out /content/drive/MyDrive/crb   # resumable
+python ml_pipeline/run_benchmark.py --out results/crb   # custom output dir (resumable)
 ```
 
-On Google Colab use `colab_run.ipynb` (T4 GPU). Runs are appended to `runs.csv` one at a time,
-and re-running the same command **resumes** (finished runs are skipped).
+On Google Colab use `colab_run.ipynb` (T4 GPU); it runs directly from this GitHub repo. Runs are
+appended to `runs.csv` one at a time, and re-running the same command **resumes** (finished runs
+are skipped). N-CMAPSS is not on GitHub (~28 GB), so Colab runs cover CMAPSS FD001–FD004 and PHM08.
 
 Outputs (`ml_pipeline/results/benchmark/` or `--out`):
 
