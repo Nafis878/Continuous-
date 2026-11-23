@@ -23,6 +23,41 @@ Full specification: **[BENCHMARK.md](BENCHMARK.md)**.
    so after a disconnect just Run all again and it resumes. Without Drive (`SAVE_TO_DRIVE = False`)
    results stay on the Colab machine and are downloaded as a zip.
 
+## One-command pipeline scripts
+
+`run_pipeline.py` (any OS) and `run_pipeline.sh` (Colab / Linux / macOS) run everything in order:
+environment check → smoke test (stops early if anything fails) → full benchmark → optional studies
+→ summary. Output goes to one folder (`--out`) with `benchmark/`, `studies/`, `logs/` (one log per
+stage) and `pipeline_status.json`. Re-running resumes the benchmark.
+
+```bash
+python run_pipeline.py --quick                            # ~2 min check of every model
+python run_pipeline.py                                    # smoke test + full benchmark (3 seeds)
+python run_pipeline.py --out /content/drive/MyDrive/CRB   # Colab: results in the mounted Drive
+python run_pipeline.py --models CATT+TCT CATT TCN --datasets FD001 FD004
+python run_pipeline.py --with-studies --with-scania --with-ablation   # everything
+python run_pipeline.py --dry-run --with-scania            # show the plan only
+bash run_pipeline.sh --help                               # all options
+```
+
+In Colab (after mounting Drive) a single cell is enough:
+
+```python
+!git clone -q https://github.com/Nafis878/Continuous-.git /content/Continuous
+%cd /content/Continuous
+!python run_pipeline.py --install --out /content/drive/MyDrive/CRB
+```
+
+| Option | Effect |
+|---|---|
+| `--quick` | environment + smoke test only |
+| `--seeds`, `--datasets`, `--models`, `--epochs` | passed to the benchmark |
+| `--with-studies` | condition clustering (FD002/FD004) + N-CMAPSS multi-file study |
+| `--with-scania` | SCANIA classification studies (downloads ~1.7 GB LFS data automatically) |
+| `--with-ablation` | LSTM ablation study (needs SCANIA data too) |
+| `--install` | `pip install -r ml_pipeline/requirements.txt` first |
+| `--skip-smoke`, `--keep-going`, `--dry-run` | skip smoke test / run studies even if benchmark failed / print plan |
+
 ## Run locally
 
 ```bash
