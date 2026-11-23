@@ -94,9 +94,11 @@ python ml_pipeline/run_benchmark.py --datasets FD001 FD004 --models CATT+TCT TCN
 python ml_pipeline/run_benchmark.py --out results/crb   # custom output dir (resumable)
 ```
 
-On Google Colab use `colab_run.ipynb` (T4 GPU); it runs directly from this GitHub repo. Runs are
-appended to `runs.csv` one at a time, and re-running the same command **resumes** (finished runs
-are skipped). N-CMAPSS is not on GitHub (~28 GB), so Colab runs cover CMAPSS FD001–FD004 and PHM08.
+On Google Colab use `colab_run.ipynb` (T4 GPU): code comes from this GitHub repo and results go
+to the Google Drive of whoever runs it (`My Drive/CRB/results`). Runs are appended to `runs.csv`
+one at a time, and re-running the same command **resumes** (finished runs are skipped).
+N-CMAPSS is not on GitHub (~28 GB); on Colab it is included if the mounted Drive has
+`My Drive/N-CMAPSS/*.h5`.
 
 Outputs (`ml_pipeline/results/benchmark/` or `--out`):
 
