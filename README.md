@@ -26,6 +26,16 @@ With `RUN_EVERYTHING = True` (default) the notebook runs `run_pipeline.py --all`
 downloaded from NASA automatically (~15 GB, streamed, CRC-checked), then the smoke test, the full
 benchmark on CMAPSS FD001–FD004 + PHM08 + N-CMAPSS DS01/02/03/05/07, and all studies.
 
+## Results of earlier runs (`results/`)
+
+| Run | Status |
+|---|---|
+| [`results/crb_2026-11-24_T4`](results/crb_2026-11-24_T4/README.md) | benchmark complete (390/390 runs, T4); studies incomplete |
+
+To continue from a committed run on any Drive/account, pass `--resume-from results/<run>` (the Colab
+notebook does this by default via `RESUME_FROM`): finished benchmark runs are skipped and only the
+missing parts run.
+
 ## One-command pipeline scripts
 
 `run_pipeline.py` (any OS) and `run_pipeline.sh` (Colab / Linux / macOS) run everything in order:

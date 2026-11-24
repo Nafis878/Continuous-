@@ -360,10 +360,23 @@ class Pipeline:
         print("\nPIPELINE " + ("FAILED" if failed else "COMPLETED"))
         return 1 if failed else 0
 
+    def seed_from_results(self, src_arg: str):
+        """Start from earlier results (e.g. committed in results/<run>/): finished runs are skipped."""
+        src = Path(src_arg)
+        if not src.is_absolute() and not src.exists():
+            src = REPO / src_arg  # allow paths relative to the repo root
+        if not src.is_dir():
+            print(f"[resume] WARNING: --resume-from {src_arg} not found -> starting without it", flush=True)
+            return
+        n = Mirror._copy_tree(src, self.out)
+        print(f"[resume] seeded {n} file(s) from {src} -> {self.out}", flush=True)
+
     def main(self) -> int:
         t0 = time.time()
         if not self.args.dry_run:
             self.out.mkdir(parents=True, exist_ok=True)
+            if self.args.resume_from:
+                self.seed_from_results(self.args.resume_from)
             self.mirror.seed_from_final()
             if self.args.sync_only:
                 ok = self.mirror.sync("sync-only") if self.mirror.enabled else True
@@ -407,6 +420,8 @@ def parse_args(argv=None):
                                        "Google Drive, otherwise --out itself)")
     ap.add_argument("--sync-every", type=int, default=120, help="seconds between copies work -> --out (default 120)")
     ap.add_argument("--sync-only", action="store_true", help="only copy the work folder to --out, then exit")
+    ap.add_argument("--resume-from", help="earlier results folder to start from, e.g. results/crb_2026-11-24_T4 "
+                                          "(finished benchmark runs are skipped)")
     a = ap.parse_args(argv)
     if a.all:
         a.with_ncmapss = a.with_studies = a.with_scania = a.with_ablation = True
