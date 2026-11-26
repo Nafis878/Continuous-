@@ -54,6 +54,15 @@ PROPOSED = ["CATT", "CATT+TCT"]          # architecture alone, architecture + me
 METHOD_ABLATION = ["TCN+TCT"]           # TCT applied to a strong baseline
 DEFAULT_MODELS = BASELINES + PROPOSED + METHOD_ABLATION
 OPTIONAL_MODELS = ["RandomForest"]      # slow on Colab's 2 CPU cores
+# TCT component ablation (run into a separate output folder, compared against CATT / CATT+TCT):
+# each variant changes exactly one thing relative to CATT+TCT.
+TCT_ABLATION = {
+    "CATT+TCT-noConsistency": dict(TCT, consistency=0.0),   # no trajectory-consistency loss
+    "CATT+TCT-noLatePenalty": dict(TCT, late_penalty=0.0),  # symmetric loss
+    "CATT+TCT-noSmoothing": dict(TCT, smoothing=None),      # no causal smoothing at inference
+    "CATT+TCT-lambda0.3": dict(TCT, consistency=0.3),       # weaker consistency weight
+    "CATT+TCT-lambda3": dict(TCT, consistency=3.0),         # stronger consistency weight
+}
 
 
 def make_model(name: str, seed: int, bundle: dict, epochs: int, patience: int):
@@ -74,6 +83,8 @@ def make_model(name: str, seed: int, bundle: dict, epochs: int, patience: int):
         "CATT+TCT": lambda: DeepRUL("catt", cond, **deep, **TCT),
         "TCN+TCT": lambda: DeepRUL("tcn", {}, **deep, **TCT),
     }
+    for abl_name, abl_cfg in TCT_ABLATION.items():
+        registry[abl_name] = (lambda cfg=abl_cfg: DeepRUL("catt", cond, **deep, **cfg))
     if name not in registry:
         raise SystemExit(f"Unknown model {name!r}. Available: {', '.join(registry)}")
     return registry[name]()
@@ -208,6 +219,7 @@ def main():
             try:
                 model = make_model(model_name, seed, bundle, args.epochs, args.patience)
                 row.update(evaluate(model, bundle))
+                row["backend"] = getattr(model, "backend", "torch" if isinstance(model, DeepRUL) else "sklearn")
                 row["status"] = "ok"
                 last = f" last={row['last_rmse']:.2f}" if "last_rmse" in row else ""
                 print(f"RMSE={row['rmse']:.2f} <=30:{row['rmse_critical']:.2f} TCE={row['tce']:.2f}{last} "

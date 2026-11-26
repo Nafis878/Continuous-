@@ -30,7 +30,7 @@ benchmark on CMAPSS FD001–FD004 + PHM08 + N-CMAPSS DS01/02/03/05/07, and all s
 
 | Run | Status |
 |---|---|
-| [`results/crb_2026-11-24_T4`](results/crb_2026-11-24_T4/README.md) | benchmark complete (390/390 runs, T4); studies incomplete |
+| [`results/crb_2026-11-24_T4`](results/crb_2026-11-24_T4/README.md) | benchmark complete (390/390 runs, 3 seeds, T4); condition-clustering + N-CMAPSS studies complete; SCANIA studies + ablation pending |
 
 To continue from a committed run on any Drive/account, pass `--resume-from results/<run>` (the Colab
 notebook does this by default via `RESUME_FROM`): finished benchmark runs are skipped and only the
@@ -73,7 +73,12 @@ else:
 
 | Option | Effect |
 |---|---|
-| `--all` | everything: `--with-ncmapss --with-studies --with-scania --with-ablation` |
+| `--all` | everything: `--with-ncmapss --with-tct-ablation --with-studies --with-scania --with-ablation` |
+| `--with-tct-ablation` | CATT+TCT with each TCT component removed + lambda 0.3 / 3 -> `OUT/tct_ablation` |
+| `--rf-backend gpu` | RandomForest in the studies on the GPU (XGBoost); the benchmark always uses sklearn |
+| `--study-seeds` | seeds for the studies (default 42 43 44) |
+| `--resume-from DIR` | start from earlier results (finished runs and completed studies are skipped) |
+| `--rerun-studies`, `--no-analysis` | redo completed studies / skip the statistical analysis |
 | `--with-ncmapss` | download N-CMAPSS DS01/02/03/05/07 from NASA (~15 GB; skipped if already present) |
 | `--ncmapss-dir` | where N-CMAPSS lives / is downloaded (default `N-CMAPSS/data_set`) |
 | `--quick` | environment + smoke test only |

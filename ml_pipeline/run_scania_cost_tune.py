@@ -106,6 +106,7 @@ def main():
             print(f"   val argmax={base_va:.0f} decode={cs_va:.0f} -> {chosen}; "
                   f"test cost={final['total_cost']:.0f} F1={final['f1_macro']:.4f}")
             rows.append({"dataset": "SCANIA-Component-X", "model": name, "seed": seed,
+                         "backend": getattr(model, "backend", "torch" if hasattr(model, "model") else "sklearn"),
                          "decision_rule": chosen, "val_cost_argmax": float(base_va),
                          "val_cost_decode": float(cs_va),
                          **{f"test_{key}": final[key] for key in METRIC_KEYS}})

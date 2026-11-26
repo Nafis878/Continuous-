@@ -46,11 +46,14 @@ import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent
 ML = REPO / "ml_pipeline"
 DEFAULT_NCMAPSS_DIR = REPO / "N-CMAPSS" / "data_set"
+TCT_ABLATION_MODELS = ["CATT+TCT-noConsistency", "CATT+TCT-noLatePenalty", "CATT+TCT-noSmoothing",
+                       "CATT+TCT-lambda0.3", "CATT+TCT-lambda3"]
 SCANIA_DATA = REPO / "SCANIA-Component-X" / "data"
 SCANIA_LFS = ["train_operational_readouts.csv", "validation_operational_readouts.csv", "test_operational_readouts.csv"]
 
@@ -59,6 +62,90 @@ for _s in (sys.stdout, sys.stderr):  # never crash on console encoding
         _s.reconfigure(errors="replace")
     except AttributeError:
         pass
+
+
+def _lfs_pointer(path: Path):
+    """Return (sha256, size) if path is a Git LFS pointer file, else None."""
+    try:
+        with open(path, "rb") as fh:
+            head = fh.read(200)
+    except OSError:
+        return None
+    if not head.startswith(b"version https://git-lfs"):
+        return None
+    txt = head.decode("utf-8", "replace")
+    oid = next((l.split("sha256:", 1)[1].strip() for l in txt.splitlines() if l.startswith("oid sha256:")), None)
+    size = next((int(l.split()[1]) for l in txt.splitlines() if l.startswith("size ")), None)
+    return (oid, size) if oid and size else None
+
+
+def _github_slug_and_ref(repo: Path):
+    """owner/name and commit of the clone (for media.githubusercontent.com); safe defaults."""
+    slug, ref = "Nafis878/Continuous-", "main"
+    try:
+        url = subprocess.run(["git", "-C", str(repo), "remote", "get-url", "origin"],
+                             capture_output=True, text=True, timeout=30).stdout.strip()
+        if "github.com" in url:
+            slug = url.split("github.com", 1)[1].lstrip(":/").removesuffix(".git").split("@")[-1]
+            slug = "/".join(slug.split("/")[-2:])
+        head = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                              capture_output=True, text=True, timeout=30).stdout.strip()
+        if len(head) == 40:
+            ref = head
+    except Exception:
+        pass
+    return slug, ref
+
+
+def download_lfs_file(repo: Path, rel_path: str, log=print) -> bool:
+    """
+    Replace a Git LFS pointer with the real file by downloading it from GitHub's media
+    server (works without git-lfs installed). Size and SHA-256 are verified.
+    """
+    import hashlib
+    import urllib.request
+
+    target = repo / rel_path
+    ptr = _lfs_pointer(target)
+    if ptr is None:
+        return target.exists()
+    oid, size = ptr
+    slug, ref = _github_slug_and_ref(repo)
+    url = f"https://media.githubusercontent.com/media/{slug}/{ref}/{rel_path}"
+    tmp = target.with_name(target.name + ".part")
+    for attempt in range(5):
+        try:
+            log(f"[lfs] downloading {rel_path} ({size / 1e6:.0f} MB) from {url}")
+            h, n = hashlib.sha256(), 0
+            req = urllib.request.Request(url, headers={"User-Agent": "crb-pipeline"})
+            with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as fh:
+                while True:
+                    chunk = r.read(8 << 20)
+                    if not chunk:
+                        break
+                    fh.write(chunk)
+                    h.update(chunk)
+                    n += len(chunk)
+            if n != size or h.hexdigest() != oid:
+                raise IOError(f"verification failed (size {n}/{size}, sha256 {h.hexdigest()[:12]}/{oid[:12]})")
+            os.replace(tmp, target)
+            log(f"[lfs] OK {rel_path} (size + sha256 verified)")
+            return True
+        except Exception as exc:
+            log(f"[lfs] attempt {attempt + 1} failed: {exc}")
+            time.sleep(min(60, 5 * 2 ** attempt))
+    tmp.unlink(missing_ok=True)
+    return False
+
+
+# study name -> output file that only exists when the study finished (under OUT/studies)
+STUDY_DONE = {
+    "condition_rul": "family_comparison/condition_rul_summary.json",
+    "n_cmapss_multi": "family_comparison/n_cmapss_multi_summary.json",
+    "family_comparison": "family_comparison/summary.json",
+    "scania_cost_tune": "family_comparison/scania_cost_tune.json",
+    "ablation": "ablation/ablation_summary.json",
+}
 
 
 def banner(text: str):
@@ -178,12 +265,15 @@ class Pipeline:
         self.py = sys.executable
         self.ncmapss_dir = Path(args.ncmapss_dir).resolve() if args.ncmapss_dir else DEFAULT_NCMAPSS_DIR
         # every subprocess writes study results under OUT/studies and finds N-CMAPSS here
-        self.child_env = {"CRB_RESULTS_DIR": str(self.out / "studies"), "NCMAPSS_DIR": str(self.ncmapss_dir)}
+        self.child_env = {"CRB_RESULTS_DIR": str(self.out / "studies"), "NCMAPSS_DIR": str(self.ncmapss_dir),
+                          "CRB_RF_BACKEND": args.rf_backend}
 
     # ------------------------------------------------------------------ #
-    def run(self, name: str, cmd: list[str], env: dict | None = None) -> bool:
-        """Run a command, stream its output live and tee it to OUT/logs/<name>.log."""
-        print(f"$ {' '.join(cmd)}", flush=True)
+    def run(self, name: str, cmd: list[str], env: dict | None = None, tag: str | None = None) -> bool:
+        """Run a command, stream its output live and tee it to OUT/logs/<name>.log.
+        tag: prefix for console lines when several commands run in parallel."""
+        pre = f"[{tag}:{name}] " if tag else ""
+        print(f"{pre}$ {' '.join(cmd)}", flush=True)
         if self.args.dry_run:
             self.status.append({"stage": name, "status": "dry-run", "cmd": cmd})
             return True
@@ -195,7 +285,7 @@ class Pipeline:
             proc = subprocess.Popen(cmd, cwd=REPO, env=full_env, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
             for line in proc.stdout:
-                print(line, end="", flush=True)
+                print(pre + line, end="", flush=True)
                 log.write(line)
             rc = proc.wait()
         ok = rc == 0
@@ -211,7 +301,7 @@ class Pipeline:
 
     # ------------------------------------------------------------------ #
     def stage_env(self) -> bool:
-        banner("1/6  Environment")
+        banner("1/8  Environment")
         if self.args.install and not self.args.dry_run:
             if not self.run("pip_install", [self.py, "-m", "pip", "install", "-q", "-r", str(ML / "requirements.txt")]):
                 return False
@@ -244,7 +334,7 @@ class Pipeline:
         return True
 
     def stage_data(self) -> bool:
-        banner("2/6  Data (N-CMAPSS)")
+        banner("2/8  Data (N-CMAPSS)")
         if not self.args.with_ncmapss:
             self.skip("ncmapss_download", "not requested (--with-ncmapss / --all)")
             return True
@@ -266,18 +356,20 @@ class Pipeline:
         return cmd
 
     def stage_smoke(self) -> bool:
-        banner("3/6  Smoke test (every model, 1 epoch, small subsets)")
+        banner("3/8  Smoke test (every model, 1 epoch, small subsets)")
         if self.args.skip_smoke and not self.args.quick:
             self.skip("smoke", "--skip-smoke")
             return True
-        return self.run("smoke", self.bench_cmd(self.out / "smoke", quick=True))
+        # benchmark RandomForest is always sklearn (as in the published runs); GPU RF is for studies only
+        return self.run("smoke", self.bench_cmd(self.out / "smoke", quick=True), env={"CRB_RF_BACKEND": "sklearn"})
 
     def stage_benchmark(self) -> bool:
-        banner("4/6  Continuous RUL Benchmark (CRB)")
+        banner("4/8  Continuous RUL Benchmark (CRB)")
         if self.args.quick:
             self.skip("benchmark", "--quick (smoke test only)")
             return True
-        return self.run("benchmark", self.bench_cmd(self.out / "benchmark", quick=False))
+        return self.run("benchmark", self.bench_cmd(self.out / "benchmark", quick=False),
+                        env={"CRB_RF_BACKEND": "sklearn"})
 
     # ------------------------------------------------------------------ #
     def scania_data_ready(self) -> bool:
@@ -295,15 +387,24 @@ class Pipeline:
             print("SCANIA data present.")
             return True
         print("SCANIA operational CSVs are Git LFS pointers -> downloading (~1.7 GB) ...")
-        if shutil.which("git") is None:
-            print("git not found; cannot fetch LFS data.")
-            return False
-        ok = self.run("lfs_install", ["git", "lfs", "install", "--skip-repo"]) and \
+        if self.args.dry_run:
+            print("(dry-run) would fetch SCANIA LFS data")
+            return True
+        has_lfs = shutil.which("git") is not None and subprocess.run(
+            ["git", "lfs", "version"], capture_output=True).returncode == 0
+        if has_lfs:
             self.run("lfs_pull", ["git", "lfs", "pull", "--include", "SCANIA-Component-X/data/*"])
-        return ok and (self.args.dry_run or self.scania_data_ready())
+            if self.scania_data_ready():
+                return True
+            print("git lfs pull did not fetch the files -> direct download fallback")
+        else:
+            print("git-lfs is not installed -> downloading the files directly from GitHub")
+        ok = all(download_lfs_file(REPO, f"SCANIA-Component-X/data/{f}") for f in SCANIA_LFS)
+        self.status.append({"stage": "scania_data", "status": "ok" if ok else "failed: download"})
+        return ok and self.scania_data_ready()
 
     def stage_studies(self) -> bool:
-        banner("5/6  Optional studies")
+        banner("6/8  Optional studies")
         a = self.args
         if not (a.with_studies or a.with_scania or a.with_ablation):
             self.skip("studies", "none requested (--with-studies / --with-scania / --with-ablation)")
@@ -311,25 +412,102 @@ class Pipeline:
         if a.quick:
             self.skip("studies", "--quick (studies have no quick mode)")
             return True
-        seeds = ["--seeds", *map(str, a.seeds)]
-        ok = True
-        if a.with_studies:
-            ok &= self.run("condition_rul", [self.py, str(ML / "run_condition_rul.py"), *seeds])
-            ok &= self.run("n_cmapss_multi", [self.py, str(ML / "run_n_cmapss_multi.py"), *seeds])
-        if a.with_scania or a.with_ablation:
-            if not self.ensure_scania():
-                self.status.append({"stage": "scania_data", "status": "failed: could not fetch LFS data"})
+        seeds = ["--seeds", *map(str, a.study_seeds)]
+        print(f"RandomForest backend: {a.rf_backend}  |  parallel study lanes: {a.parallel_studies}  |  "
+              f"study seeds: {a.study_seeds}", flush=True)
+
+        def done(name):
+            if a.rerun_studies:
                 return False
+            f = self.out / "studies" / STUDY_DONE[name]
+            if f.exists():
+                self.skip(name, f"already complete ({STUDY_DONE[name]} exists; --rerun-studies to redo)")
+                return True
+            return False
+
+        need_scania = (a.with_scania and not (done("family_comparison") & done("scania_cost_tune"))) or \
+            (a.with_ablation and not done("ablation"))
+        if need_scania and not self.ensure_scania():
+            self.status.append({"stage": "scania_data", "status": "failed: could not fetch SCANIA data"})
+            print("SCANIA data unavailable -> running only the studies that do not need it.")
+
+        # Two independent lanes (different result files, moderate RAM); the ablation (loads
+        # SCANIA-TTE + all RUL sets, heaviest on RAM) always runs alone afterwards.
+        scania_ok = self.scania_data_ready()
+        lane_a = []
+        if a.with_studies:
+            lane_a += [(n, [self.py, str(ML / f"run_{n}.py"), *seeds])
+                       for n in ("condition_rul", "n_cmapss_multi") if not done(n)]
+        lane_b = []
         if a.with_scania:
-            ok &= self.run("family_comparison", [self.py, str(ML / "run_family_comparison.py"), *seeds])
-            ok &= self.run("scania_cost_tune", [self.py, str(ML / "run_scania_cost_tune.py"), *seeds])
-        if a.with_ablation:
-            ok &= self.run("ablation", [self.py, str(ML / "run_ablation.py")])
+            for n in ("family_comparison", "scania_cost_tune"):
+                if done(n):
+                    continue
+                if not scania_ok:
+                    self.status.append({"stage": n, "status": "failed: SCANIA data missing"})
+                    continue
+                lane_b.append((n, [self.py, str(ML / f"run_{n}.py"), *seeds]))
+
+        def run_lane(lane, tag):
+            res = True
+            for name, cmd in lane:
+                res &= self.run(name, cmd, tag=tag)
+            return res
+
+        ok = True
+        if a.parallel_studies > 1 and lane_a and lane_b and not a.dry_run:
+            print("Running lanes in parallel: A=[condition_rul, n_cmapss_multi]  "
+                  "B=[family_comparison, scania_cost_tune]", flush=True)
+            with ThreadPoolExecutor(max_workers=2) as ex:
+                fa = ex.submit(run_lane, lane_a, "A")
+                fb = ex.submit(run_lane, lane_b, "B")
+                ok = fa.result() and fb.result()
+        else:
+            ok = run_lane(lane_a, None) and ok
+            ok = run_lane(lane_b, None) and ok
+        if a.with_ablation and not done("ablation"):
+            if scania_ok:
+                ok = self.run("ablation", [self.py, str(ML / "run_ablation.py")]) and ok
+            else:
+                self.status.append({"stage": "ablation", "status": "failed: SCANIA data missing"})
+                ok = False
         return bool(ok)
 
     # ------------------------------------------------------------------ #
+    def stage_tct_ablation(self) -> bool:
+        banner("5/8  TCT component ablation")
+        if not self.args.with_tct_ablation:
+            self.skip("tct_ablation", "not requested (--with-tct-ablation / --all)")
+            return True
+        if self.args.quick:
+            self.skip("tct_ablation", "--quick")
+            return True
+        cmd = [self.py, str(ML / "run_benchmark.py"), "--out", str(self.out / "tct_ablation"),
+               "--seeds", *map(str, self.args.seeds), "--models", *TCT_ABLATION_MODELS]
+        if self.args.datasets:
+            cmd += ["--datasets", *self.args.datasets]
+        if self.args.epochs:
+            cmd += ["--epochs", str(self.args.epochs)]
+        return self.run("tct_ablation", cmd)
+
+    def stage_analysis(self) -> bool:
+        banner("7/8  Statistical analysis")
+        runs = self.out / ("smoke" if self.args.quick else "benchmark") / "runs.csv"
+        if self.args.no_analysis or self.args.quick:
+            self.skip("analysis", "--no-analysis" if self.args.no_analysis else "--quick")
+            return True
+        if not runs.exists() and not self.args.dry_run:
+            self.skip("analysis", f"{runs} not found")
+            return True
+        cmd = [self.py, str(ML / "analyze_results.py"), "--runs", str(runs), "--out", str(self.out / "analysis")]
+        abl = self.out / "tct_ablation" / "runs.csv"
+        if abl.exists() or (self.args.dry_run and self.args.with_tct_ablation):
+            cmd += ["--ablation-runs", str(abl)]
+        return self.run("analysis", cmd)
+
+    # ------------------------------------------------------------------ #
     def summary(self, t0: float) -> int:
-        banner("6/6  Summary")
+        banner("8/8  Summary")
         failed = [s for s in self.status if str(s["status"]).startswith("failed")]
         for s in self.status:
             mins = f"{s['minutes']:.1f} min" if "minutes" in s else ""
@@ -393,7 +571,9 @@ class Pipeline:
             return self.summary(t0)
         bench_ok = self.stage_benchmark()
         if bench_ok or self.args.keep_going:
+            self.stage_tct_ablation()
             self.stage_studies()
+        self.stage_analysis()
         return self.summary(t0)
 
 
@@ -410,6 +590,12 @@ def parse_args(argv=None):
                     help="everything: --with-ncmapss --with-studies --with-scania --with-ablation")
     ap.add_argument("--with-ncmapss", action="store_true", help="download N-CMAPSS (~15 GB) and include it")
     ap.add_argument("--ncmapss-dir", help=f"where N-CMAPSS .h5 files live / are downloaded (default {DEFAULT_NCMAPSS_DIR})")
+    ap.add_argument("--with-tct-ablation", action="store_true",
+                    help="TCT component ablation (CATT+TCT variants) -> OUT/tct_ablation")
+    ap.add_argument("--study-seeds", type=int, nargs="+", default=[42, 43, 44],
+                    help="seeds for the optional studies (default 42 43 44)")
+    ap.add_argument("--rerun-studies", action="store_true", help="re-run studies that are already complete")
+    ap.add_argument("--no-analysis", action="store_true", help="skip the statistical analysis stage")
     ap.add_argument("--with-studies", action="store_true", help="condition clustering + N-CMAPSS multi-file")
     ap.add_argument("--with-scania", action="store_true", help="SCANIA classification studies (pulls LFS data)")
     ap.add_argument("--with-ablation", action="store_true", help="LSTM ablation study (pulls LFS data)")
@@ -420,11 +606,16 @@ def parse_args(argv=None):
                                        "Google Drive, otherwise --out itself)")
     ap.add_argument("--sync-every", type=int, default=120, help="seconds between copies work -> --out (default 120)")
     ap.add_argument("--sync-only", action="store_true", help="only copy the work folder to --out, then exit")
+    ap.add_argument("--rf-backend", choices=["sklearn", "gpu"], default="sklearn",
+                    help="RandomForest in the optional STUDIES: sklearn on CPU (default) or gpu = XGBoost "
+                         "random forest on CUDA (much faster on Colab T4). The benchmark always uses sklearn.")
+    ap.add_argument("--parallel-studies", type=int, choices=[1, 2], default=1,
+                    help="run the two independent study lanes at the same time (2) or one after another (1)")
     ap.add_argument("--resume-from", help="earlier results folder to start from, e.g. results/crb_2026-11-24_T4 "
                                           "(finished benchmark runs are skipped)")
     a = ap.parse_args(argv)
     if a.all:
-        a.with_ncmapss = a.with_studies = a.with_scania = a.with_ablation = True
+        a.with_ncmapss = a.with_studies = a.with_scania = a.with_ablation = a.with_tct_ablation = True
     return a
 
 

@@ -183,6 +183,7 @@ def evaluate_rul_dataset(bundle: dict, seed: int = 42, models: dict | None = Non
             {
                 "dataset": bundle["name"],
                 "model": name,
+                "backend": getattr(model, "backend", "torch" if hasattr(model, "model") else "sklearn"),
                 "seed": seed,
                 "seconds": round(time.time() - t0, 2),
                 "status": "ok",
@@ -226,6 +227,7 @@ def evaluate_scania(bundle: dict, seed: int = 42) -> list[dict]:
             {
                 "dataset": "SCANIA-Component-X",
                 "model": name,
+                "backend": getattr(model, "backend", "torch" if hasattr(model, "model") else "sklearn"),
                 "seed": seed,
                 "seconds": round(time.time() - t0, 2),
                 "status": "ok",

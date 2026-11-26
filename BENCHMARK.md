@@ -85,6 +85,20 @@ Ranking per dataset uses mean continuous RMSE; the summary table also reports av
 - Reported variants: `CATT` (architecture only), `CATT+TCT` (full proposal), `TCN+TCT`
   (method on a strong baseline, to show TCT is architecture-agnostic).
 
+## Statistical analysis
+
+`ml_pipeline/analyze_results.py` (run automatically as the pipeline's analysis stage) writes
+`analysis/REPORT.md`, `stats.json` and `cd_diagram.png`: Friedman test over datasets with Nemenyi
+critical difference (Demsar, 2006); paired Wilcoxon signed-rank tests over (dataset, seed) for the
+proposed models vs. every baseline (Holm-corrected); the effect of TCT on CATT and TCN (RMSE,
+RMSE<=30, TCE, last-window PHM); continuous vs. last-window ranking agreement (Kendall tau); and the
+TCT component ablation.
+
+## TCT component ablation
+
+`--with-tct-ablation` trains CATT+TCT variants that change exactly one thing: no consistency loss,
+no late penalty, no causal smoothing, and consistency weight lambda = 0.3 / 3 (default 1).
+
 ## Running
 
 ```bash

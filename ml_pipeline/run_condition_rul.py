@@ -128,6 +128,7 @@ def run_fd(fd: str, seeds):
                 m["val_rmse"] = rul_family_metrics(y_va, np.maximum(model.predict(X_va), 0.0))["rmse"]
                 m["last_rmse"] = rul_family_metrics(y_tl, np.maximum(model.predict(X_tl), 0.0))["rmse"]
                 m.update({"dataset": pack["name"], "mode": mode, "model": name, "seed": seed,
+                          "backend": getattr(model, "backend", "torch" if hasattr(model, "model") else "sklearn"),
                           "seconds": round(time.time() - t0, 2)})
                 print(f"  {name:16s} val={m['val_rmse']:.3f}  cont={m['rmse']:.3f}  last={m['last_rmse']:.3f}")
                 rows.append(m)

@@ -1,0 +1,46 @@
+{
+  "selection": "lowest mean validation RMSE",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "winners": [
+    {
+      "dataset": "CMAPSS-FD002",
+      "mode": "cond_cluster",
+      "model": "LSTM",
+      "val_rmse": 16.49579372310623,
+      "rmse_mean": 17.79467919188863,
+      "rmse_std": 0.6876265432525572,
+      "last_rmse_mean": 15.5170425453342,
+      "r2_mean": 0.6690466815816145,
+      "phm_mean": 188143.72872970533
+    },
+    {
+      "dataset": "CMAPSS-FD004",
+      "mode": "cond_cluster",
+      "model": "LSTM",
+      "val_rmse": 16.633831615235906,
+      "rmse_mean": 14.906495269548032,
+      "rmse_std": 0.42210680108851106,
+      "last_rmse_mean": 15.199700574087197,
+      "r2_mean": 0.7003883510614962,
+      "phm_mean": 346210.903455544
+    }
+  ],
+  "cond_vs_plain": [
+    {
+      "dataset": "CMAPSS-FD002",
+      "plain_selected": "Linear test RMSE=18.611",
+      "cond_selected": "LSTM test RMSE=17.795",
+      "delta_rmse_cond_minus_plain": -0.8161804989063484
+    },
+    {
+      "dataset": "CMAPSS-FD004",
+      "plain_selected": "GradientBoosting test RMSE=16.943",
+      "cond_selected": "LSTM test RMSE=14.906",
+      "delta_rmse_cond_minus_plain": -2.0363084229327377
+    }
+  ]
+}

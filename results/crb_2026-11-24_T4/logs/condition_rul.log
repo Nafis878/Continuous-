@@ -1,0 +1,93 @@
+
+=== CMAPSS-FD002 :: plain :: seed=42 ===
+  LSTM             val=18.690  cont=18.271  last=16.702
+  RandomForest     val=20.468  cont=19.775  last=17.310
+  GradientBoosting val=19.607  cont=19.145  last=17.144
+  Linear           val=17.559  cont=18.611  last=16.519
+  MeanRUL          val=41.738  cont=38.078  last=43.540
+
+=== CMAPSS-FD002 :: plain :: seed=43 ===
+  LSTM             val=18.968  cont=18.868  last=16.661
+  RandomForest     val=20.573  cont=19.842  last=17.556
+  GradientBoosting val=19.552  cont=19.098  last=16.870
+  Linear           val=17.559  cont=18.611  last=16.519
+  MeanRUL          val=41.738  cont=38.078  last=43.540
+
+=== CMAPSS-FD002 :: plain :: seed=44 ===
+  LSTM             val=18.128  cont=18.646  last=15.738
+  RandomForest     val=20.485  cont=19.829  last=17.404
+  GradientBoosting val=19.571  cont=19.106  last=16.979
+  Linear           val=17.559  cont=18.611  last=16.519
+  MeanRUL          val=41.738  cont=38.078  last=43.540
+
+=== CMAPSS-FD002 :: cond_cluster :: seed=42 ===
+  LSTM             val=16.345  cont=18.057  last=15.597
+  RandomForest     val=19.479  cont=19.242  last=16.884
+  GradientBoosting val=17.644  cont=18.092  last=15.763
+  Linear           val=17.210  cont=18.316  last=16.465
+  MeanRUL          val=41.738  cont=38.078  last=43.540
+
+=== CMAPSS-FD002 :: cond_cluster :: seed=43 ===
+  LSTM             val=16.583  cont=18.312  last=16.495
+  RandomForest     val=19.505  cont=19.247  last=16.608
+  GradientBoosting val=17.680  cont=18.035  last=15.990
+  Linear           val=17.210  cont=18.316  last=16.465
+  MeanRUL          val=41.738  cont=38.078  last=43.540
+
+=== CMAPSS-FD002 :: cond_cluster :: seed=44 ===
+  LSTM             val=16.559  cont=17.014  last=14.459
+  RandomForest     val=19.510  cont=19.235  last=16.714
+  GradientBoosting val=17.716  cont=18.068  last=15.779
+  Linear           val=17.210  cont=18.316  last=16.465
+  MeanRUL          val=41.738  cont=38.078  last=43.540
+
+=== CMAPSS-FD004 :: plain :: seed=42 ===
+  LSTM             val=18.753  cont=17.350  last=19.933
+  RandomForest     val=19.594  cont=17.996  last=19.321
+  GradientBoosting val=18.594  cont=16.932  last=18.528
+  Linear           val=19.814  cont=17.948  last=19.403
+  MeanRUL          val=41.248  cont=34.870  last=44.257
+
+=== CMAPSS-FD004 :: plain :: seed=43 ===
+  LSTM             val=19.030  cont=17.576  last=19.308
+  RandomForest     val=19.609  cont=18.018  last=19.275
+  GradientBoosting val=18.628  cont=16.933  last=18.578
+  Linear           val=19.814  cont=17.948  last=19.403
+  MeanRUL          val=41.248  cont=34.870  last=44.257
+
+=== CMAPSS-FD004 :: plain :: seed=44 ===
+  LSTM             val=19.527  cont=16.835  last=18.786
+  RandomForest     val=19.658  cont=18.049  last=19.532
+  GradientBoosting val=18.702  cont=16.964  last=18.624
+  Linear           val=19.814  cont=17.948  last=19.403
+  MeanRUL          val=41.248  cont=34.870  last=44.257
+
+=== CMAPSS-FD004 :: cond_cluster :: seed=42 ===
+  LSTM             val=16.667  cont=15.390  last=15.452
+  RandomForest     val=17.923  cont=16.197  last=18.129
+  GradientBoosting val=16.986  cont=15.420  last=17.540
+  Linear           val=19.431  cont=18.005  last=19.067
+  MeanRUL          val=41.248  cont=34.870  last=44.257
+
+=== CMAPSS-FD004 :: cond_cluster :: seed=43 ===
+  LSTM             val=16.488  cont=14.718  last=14.969
+  RandomForest     val=17.896  cont=16.204  last=18.366
+  GradientBoosting val=17.056  cont=15.424  last=17.325
+  Linear           val=19.431  cont=18.005  last=19.067
+  MeanRUL          val=41.248  cont=34.870  last=44.257
+
+=== CMAPSS-FD004 :: cond_cluster :: seed=44 ===
+  LSTM             val=16.747  cont=14.612  last=15.178
+  RandomForest     val=18.004  cont=16.178  last=18.322
+  GradientBoosting val=17.086  cont=15.424  last=17.453
+  Linear           val=19.431  cont=18.005  last=19.067
+  MeanRUL          val=41.248  cont=34.870  last=44.257
+
+=== Selected on validation ===
+     dataset         mode model  val_rmse  rmse_mean  rmse_std  last_rmse_mean
+CMAPSS-FD002 cond_cluster  LSTM 16.495794  17.794679  0.687627       15.517043
+CMAPSS-FD004 cond_cluster  LSTM 16.633832  14.906495  0.422107       15.199701
+     dataset                    plain_selected         cond_selected  delta_rmse_cond_minus_plain
+CMAPSS-FD002           Linear test RMSE=18.611 LSTM test RMSE=17.795                    -0.816180
+CMAPSS-FD004 GradientBoosting test RMSE=16.943 LSTM test RMSE=14.906                    -2.036308
+Saved -> /content/crb_work/studies/family_comparison

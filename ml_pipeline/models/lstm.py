@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
 
 
 class LSTMNet(nn.Module):
@@ -37,6 +36,8 @@ class LSTMNet(nn.Module):
 
 class LSTMModel:
     """Sklearn-like wrapper around a PyTorch LSTM."""
+
+    EVAL_CHUNK = 4096  # windows per forward pass for validation / prediction (eval mode)
 
     def __init__(
         self,
@@ -118,11 +119,14 @@ class LSTMModel:
             output_dim=out_dim,
         ).to(self.device)
 
-        ds = TensorDataset(torch.from_numpy(X), torch.from_numpy(y))
+        # Keep the whole training set on the device and index mini-batches there: same batch size
+        # and seeded shuffling as before, but no per-batch host->GPU copies (much faster on CUDA).
+        X_t = torch.from_numpy(X).to(self.device)
+        y_t = torch.from_numpy(y).to(self.device)
+        n_train = len(X_t)
         gen = torch.Generator().manual_seed(self.seed)
-        loader = DataLoader(ds, batch_size=self.batch_size, shuffle=True, generator=gen)
 
-        val_loader = None
+        Xv_t = yv_t = None
         if X_val is not None and y_val is not None:
             Xv = np.asarray(X_val, dtype=np.float32)
             yv = np.asarray(y_val)
@@ -131,11 +135,8 @@ class LSTMModel:
             else:
                 yv = yv.astype(np.float32).reshape(-1, 1)
                 yv = ((yv - self.y_mean) / self.y_std).astype(np.float32)
-            val_loader = DataLoader(
-                TensorDataset(torch.from_numpy(Xv), torch.from_numpy(yv)),
-                batch_size=self.batch_size,
-                shuffle=False,
-            )
+            Xv_t = torch.from_numpy(Xv).to(self.device)
+            yv_t = torch.from_numpy(yv).to(self.device)
 
         opt = torch.optim.Adam(self.model.parameters(), lr=self.lr)
         best_state = None
@@ -144,24 +145,23 @@ class LSTMModel:
 
         for _ in range(self.epochs):
             self.model.train()
-            for xb, yb in loader:
-                xb = xb.to(self.device)
-                yb = yb.to(self.device)
+            perm = torch.randperm(n_train, generator=gen).to(self.device)
+            for s in range(0, n_train, self.batch_size):
+                idx = perm[s : s + self.batch_size]
                 opt.zero_grad()
-                pred = self.model(xb)
-                loss = loss_fn(pred, yb)
+                pred = self.model(X_t[idx])
+                loss = loss_fn(pred, y_t[idx])
                 loss.backward()
                 opt.step()
 
-            if val_loader is None:
+            if Xv_t is None:
                 continue
 
             self.model.eval()
             total, n = 0.0, 0
             with torch.no_grad():
-                for xb, yb in val_loader:
-                    xb = xb.to(self.device)
-                    yb = yb.to(self.device)
+                for s in range(0, len(Xv_t), self.EVAL_CHUNK):
+                    xb, yb = Xv_t[s : s + self.EVAL_CHUNK], yv_t[s : s + self.EVAL_CHUNK]
                     pred = self.model(xb)
                     total += float(loss_fn(pred, yb).item()) * len(xb)
                     n += len(xb)
@@ -182,15 +182,11 @@ class LSTMModel:
     def predict(self, X: np.ndarray) -> np.ndarray:
         assert self.model is not None
         X = np.asarray(X, dtype=np.float32)
-        loader = DataLoader(
-            TensorDataset(torch.from_numpy(X)),
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
         self.model.eval()
         outs = []
         with torch.no_grad():
-            for (xb,) in loader:
+            for s in range(0, len(X), self.EVAL_CHUNK):
+                xb = torch.from_numpy(X[s : s + self.EVAL_CHUNK])
                 pred = self.model(xb.to(self.device))
                 if self.task == "classification":
                     outs.append(pred.argmax(dim=1).cpu().numpy())

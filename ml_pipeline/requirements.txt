@@ -6,3 +6,6 @@ h5py>=3.8
 torch>=2.1
 tqdm>=4.65
 joblib>=1.3
+xgboost>=2.0      # GPU random forest for the studies (--rf-backend gpu)
+scipy>=1.10       # statistical tests
+matplotlib>=3.7   # critical-difference diagram
