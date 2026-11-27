@@ -94,6 +94,19 @@ Positive diff = removing/changing the component made the metric worse (higher).
 
 `*` = p < 0.05 (Wilcoxon signed-rank).
 
+## 6. Smoothing-only baselines (paired over dataset x seed)
+
+`X+Smooth` = plain model X + the same validation-tuned causal smoothing as TCT, no TCT loss. Rows 'X+Smooth vs X' show what smoothing alone does; 'X+TCT vs X+Smooth' show what TCT adds beyond smoothing. Negative diff = first model lower (better).
+
+| Comparison | pairs | dRMSE | dRMSE<=30 | dTCE | dLast-PHM |
+|---|---|---|---|---|---|
+| CATT+Smooth vs CATT | 50 | +0.37 | +0.62 * | -1.30 * | +60.24 |
+| LSTM+Smooth vs LSTM | 50 | +0.25 * | +0.15 | -0.42 * | -63.71 * |
+| TCN+Smooth vs TCN | 50 | +0.26 | -0.08 | -2.61 * | -201.64 * |
+| Transformer+Smooth vs Transformer | 50 | +0.51 * | +0.62 * | -1.01 * | -323.34 * |
+| CATT+TCT vs CATT+Smooth | 50 | -0.16 | -0.61 * | +0.10 | -204.62 |
+| TCN+TCT vs TCN+Smooth | 50 | -0.14 | -0.45 | +0.19 | +53.57 |
+
 ## 7. Consistency weight selected on validation
 
 For every (dataset, seed), lambda in {0.3, 1, 3} is chosen by the lowest **validation** RMSE; the test metrics of that choice are reported as `CATT+TCT(val-lambda)`. Chosen lambda: 0.3 in 26%, 1 in 18%, 3 in 56%.

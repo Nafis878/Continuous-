@@ -8,13 +8,14 @@ built up over three Colab sessions that resumed from each other:
 | 2026-11-24 | benchmark seeds 42–44 (13 models × 10 datasets, 390 runs, 355 min) |
 | 2026-11-25 | condition clustering + N-CMAPSS multi-file studies (6.2 h, sklearn RandomForest) |
 | 2026-11-26/27 | benchmark seeds 45–46 (12 models, 240 runs), TCT ablation (250 runs), family comparison, SCANIA cost tuning, LSTM ablation, statistical analysis |
+| 2026-11-27 (follow-up) | smoothing-only baselines CATT/TCN/LSTM/Transformer+Smooth (200 runs, 31 min), analysis regenerated |
 
 | | |
 |---|---|
 | Benchmark | **630/630 runs OK** — 12 models × 10 datasets × 5 seeds; RandomForest (sklearn) 3 seeds |
-| TCT ablation | **250/250 runs OK** — 5 CATT+TCT variants × 10 datasets × 5 seeds |
+| TCT ablation | **450/450 runs OK** — 5 CATT+TCT variants + 4 smoothing-only baselines × 10 datasets × 5 seeds |
 | Studies | condition clustering, N-CMAPSS multi-file, family comparison (+SCANIA), SCANIA cost tuning, LSTM ablation — all complete |
-| Analysis | `analysis/REPORT.md`, `stats.json`, `cd_diagram.png`, `tct_ablation.csv`, `val_selected_lambda.csv` (regenerated 2026-11-28 with the updated script: adds section 7, lambda selected on validation) |
+| Analysis | `analysis/REPORT.md` (sections 1–7 incl. 6: smoothing-only baselines, 7: lambda selected on validation), `stats.json`, `cd_diagram.png`, `tct_ablation.csv`, `val_selected_lambda.csv` |
 | GPU | Tesla T4, torch 2.14.1+cu130 |
 
 Note on RandomForest in `studies/family_comparison`: the GPU (XGBoost) forest ran out of GPU memory
@@ -49,6 +50,11 @@ pipeline_status*.json        status of the last session / of the 2026-11-25 stud
   CATT+TCT(val-λ) is not worse in RMSE than any strong baseline and has significantly lower TCE
   than all of them.
 - Continuous vs. last-window scoring changes the winner on 2/5 CMAPSS/PHM08 datasets.
+- **Smoothing-only baselines:** causal smoothing alone lowers TCE as much as TCT (CATT −1.30 vs −1.20,
+  TCN −2.61 vs −2.42); TCT vs smoothing-only shows no TCE difference. Smoothing alone costs accuracy
+  (RMSE +0.25…+0.51; RMSE≤30 +0.62* for CATT/Transformer); TCT recovers near-failure accuracy vs
+  smoothing-only for CATT (RMSE≤30 −0.61*, uncorrected). → TCE gains are due to smoothing; TCT's added
+  value is preserving critical-zone accuracy. Smoothing is a strong, cheap baseline for continuous RUL.
 
 ## Continue from here
 

@@ -16,7 +16,11 @@
     "CATT+TCT-noLatePenalty",
     "CATT+TCT-noSmoothing",
     "CATT+TCT-lambda0.3",
-    "CATT+TCT-lambda3"
+    "CATT+TCT-lambda3",
+    "CATT+Smooth",
+    "TCN+Smooth",
+    "LSTM+Smooth",
+    "Transformer+Smooth"
   ],
   "seeds": [
     42,
