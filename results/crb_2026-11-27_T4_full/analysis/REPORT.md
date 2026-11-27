@@ -1,0 +1,110 @@
+# CRB statistical analysis
+
+Runs: 630 (10 datasets, 13 models, seeds per model: 3-5)
+
+## 1. Overall ranking (Friedman + Nemenyi)
+
+Friedman chi2 = 32.40, p = 0.0012 over 10 datasets, 13 models. Nemenyi CD (alpha=0.05) = **5.77** rank units: models whose average ranks differ by less than the CD are not significantly different. See `cd_diagram.png`.
+
+| Model | Avg rank |
+|---|---|
+| BiLSTM-Attn | 5.50 |
+| LSTM | 5.50 |
+| Transformer | 5.50 |
+| TCN | 5.60 |
+| CATT | 5.80 |
+| Ridge | 6.00 |
+| CATT+TCT | 6.50 |
+| HistGB | 6.60 |
+| TCN+TCT | 6.60 |
+| CNN-LSTM | 6.90 |
+| RandomForest | 8.60 |
+| CNN1D | 9.60 |
+| MeanRUL | 12.30 |
+
+## 2. Proposed vs. baselines (continuous RMSE, paired over dataset x seed)
+
+Negative mean diff = proposed better. p: Wilcoxon signed-rank, Holm-corrected per proposed model.
+
+| Proposed | Baseline | pairs | mean diff | proposed better / worse | p (Holm) |
+|---|---|---|---|---|---|
+| CATT+TCT | BiLSTM-Attn | 50 | -0.13 | 23 / 27 | 1 |
+| CATT+TCT | CNN-LSTM | 50 | -0.53 | 30 / 20 | 0.388 |
+| CATT+TCT | CNN1D | 50 | -2.20 | 41 / 9 | 1.39e-05 * |
+| CATT+TCT | HistGB | 50 | -0.44 | 25 / 25 | 1 |
+| CATT+TCT | LSTM | 50 | -0.06 | 24 / 26 | 1 |
+| CATT+TCT | RandomForest | 30 | -1.24 | 20 / 10 | 0.124 |
+| CATT+TCT | Ridge | 50 | +0.37 | 27 / 23 | 1 |
+| CATT+TCT | TCN | 50 | +0.13 | 26 / 24 | 1 |
+| CATT+TCT | Transformer | 50 | +0.14 | 24 / 26 | 1 |
+| CATT | BiLSTM-Attn | 50 | -0.34 | 23 / 27 | 1 |
+| CATT | CNN-LSTM | 50 | -0.74 | 31 / 19 | 0.613 |
+| CATT | CNN1D | 50 | -2.42 | 40 / 10 | 3.59e-06 * |
+| CATT | HistGB | 50 | -0.65 | 30 / 20 | 0.768 |
+| CATT | LSTM | 50 | -0.27 | 26 / 24 | 1 |
+| CATT | RandomForest | 30 | -0.95 | 19 / 11 | 0.485 |
+| CATT | Ridge | 50 | +0.16 | 24 / 26 | 1 |
+| CATT | TCN | 50 | -0.08 | 23 / 27 | 1 |
+| CATT | Transformer | 50 | -0.07 | 25 / 25 | 1 |
+| TCN+TCT | BiLSTM-Attn | 50 | -0.15 | 22 / 28 | 1 |
+| TCN+TCT | CNN-LSTM | 50 | -0.54 | 33 / 17 | 0.829 |
+| TCN+TCT | CNN1D | 50 | -2.22 | 41 / 9 | 7.56e-05 * |
+| TCN+TCT | HistGB | 50 | -0.45 | 23 / 27 | 1 |
+| TCN+TCT | LSTM | 50 | -0.08 | 23 / 27 | 1 |
+| TCN+TCT | RandomForest | 30 | -0.91 | 19 / 11 | 0.485 |
+| TCN+TCT | Ridge | 50 | +0.36 | 30 / 20 | 1 |
+| TCN+TCT | TCN | 50 | +0.12 | 20 / 30 | 1 |
+| TCN+TCT | Transformer | 50 | +0.13 | 25 / 25 | 1 |
+
+## 3. Effect of TCT on the same architecture (paired over dataset x seed)
+
+| Comparison | Metric | pairs | mean diff | with TCT better / worse | p |
+|---|---|---|---|---|---|
+| CATT+TCT vs CATT | Continuous RMSE | 50 | +0.21 | 23 / 27 | 0.848 |
+| CATT+TCT vs CATT | RMSE (RUL<=30) | 50 | +0.00 | 27 / 23 | 0.632 |
+| CATT+TCT vs CATT | TCE | 50 | -1.20 | 49 / 1 | 1.24e-14 * |
+| CATT+TCT vs CATT | Last-window PHM | 25 | -144.38 | 19 / 6 | 0.0422 * |
+| TCN+TCT vs TCN | Continuous RMSE | 50 | +0.12 | 20 / 30 | 0.432 |
+| TCN+TCT vs TCN | RMSE (RUL<=30) | 50 | -0.53 | 30 / 20 | 0.053 |
+| TCN+TCT vs TCN | TCE | 50 | -2.42 | 50 / 0 | 1.78e-15 * |
+| TCN+TCT vs TCN | Last-window PHM | 25 | -148.07 | 21 / 4 | 0.00251 * |
+
+## 4. Continuous vs. last-window ranking
+
+| Dataset | Kendall tau | winner (continuous) | winner (last-window) | changed |
+|---|---|---|---|---|
+| FD001 | 0.52 | TCN | TCN+TCT | yes |
+| FD002 | 0.79 | Transformer | Transformer | no |
+| FD003 | 0.64 | CATT | CATT+TCT | yes |
+| FD004 | 0.64 | Transformer | Transformer | no |
+| PHM08 | 0.91 | LSTM | LSTM | no |
+
+## 5. TCT component ablation (variant minus full CATT+TCT, paired over dataset x seed)
+
+Positive diff = removing/changing the component made the metric worse (higher).
+
+| Variant | pairs | dRMSE | dRMSE<=30 | dTCE | dLast-PHM |
+|---|---|---|---|---|---|
+| CATT+TCT-lambda0.3 | 50 | +0.23 * | -0.11 | -0.06 | +11.85 |
+| CATT+TCT-lambda3 | 50 | -0.23 | -0.60 | -0.12 | -320.84 |
+| CATT+TCT-noConsistency | 50 | -0.28 | +0.55 | -0.12 | +442.52 * |
+| CATT+TCT-noLatePenalty | 50 | -0.16 | +0.48 | -0.09 * | +86.95 |
+| CATT+TCT-noSmoothing | 50 | -0.25 | -0.42 * | +0.56 * | -132.93 |
+| CATT | 50 | -0.21 | -0.00 | +1.20 * | +144.38 * |
+
+`*` = p < 0.05 (Wilcoxon signed-rank).
+
+## 7. Consistency weight selected on validation
+
+For every (dataset, seed), lambda in {0.3, 1, 3} is chosen by the lowest **validation** RMSE; the test metrics of that choice are reported as `CATT+TCT(val-lambda)`. Chosen lambda: 0.3 in 26%, 1 in 18%, 3 in 56%.
+
+| Comparison | pairs | dRMSE | dRMSE<=30 | dTCE | dLast-PHM |
+|---|---|---|---|---|---|
+| CATT+TCT(val-lambda) vs CATT+TCT | 50 | -0.25 | -0.53 | -0.18 * | -312.36 |
+| CATT+TCT(val-lambda) vs CATT | 50 | -0.04 | -0.52 | -1.38 * | -456.74 * |
+| CATT+TCT(val-lambda) vs TCN | 50 | -0.12 | -0.40 | -3.01 * | -97.77 |
+| CATT+TCT(val-lambda) vs Transformer | 50 | -0.11 | -0.07 | -0.86 * | -442.61 |
+| CATT+TCT(val-lambda) vs LSTM | 50 | -0.31 | -0.49 | -0.33 * | -163.19 |
+| CATT+TCT(val-lambda) vs BiLSTM-Attn | 50 | -0.38 | -1.24 | -0.59 * | -428.21 * |
+
+`*` = p < 0.05, Wilcoxon signed-rank, **not** multiplicity-corrected (6 comparisons).

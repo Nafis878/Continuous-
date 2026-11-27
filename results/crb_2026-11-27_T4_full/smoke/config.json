@@ -15,7 +15,6 @@
     "MeanRUL",
     "Ridge",
     "HistGB",
-    "RandomForest",
     "LSTM",
     "BiLSTM-Attn",
     "CNN1D",

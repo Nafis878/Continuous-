@@ -65,6 +65,19 @@ def rf_backend() -> str:
     return "sklearn"
 
 
+def _free_gpu_memory():
+    import gc
+
+    gc.collect()
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        pass
+
+
 class XGBRandomForest:
     """
     Random forest trained on the GPU with XGBoost's random-forest mode, configured to mirror
@@ -78,24 +91,43 @@ class XGBRandomForest:
         self.estimator = None
         self.backend = "xgboost-cuda" if device == "cuda" else "xgboost-cpu"
 
-    def fit(self, X, y, X_val=None, y_val=None):
-        try:
-            return self._fit_xgb(X, y)
-        except Exception as exc:  # e.g. GPU out of memory -> never abort a long run
-            print(f"[RandomForest] XGBoost ({self.device}) failed: {exc} -> falling back to sklearn on CPU")
-            fallback = _make_sklearn_rf(self.task, self.seed)
-            fallback.fit(X, y)
-            self.estimator, self.backend = fallback.estimator, "sklearn(fallback)"
-            return self
+    # GPU memory ladder. Depth-wise growth to depth 16 builds histograms for up to 2^15 nodes at
+    # once and ran out of memory on a 16 GB T4 for CMAPSS/PHM08 windows (2026-11-27 run).
+    # 1) leaf-wise growth, 64 bins, bounded histogram cache (same depth limit, same forest otherwise)
+    # 2) additionally cap leaves per tree
+    # 3) sklearn on CPU
+    ATTEMPTS = (
+        ("xgboost-cuda", dict(grow_policy="lossguide", max_bin=64, max_cached_hist_node=1024)),
+        ("xgboost-cuda(max_leaves=4096)", dict(grow_policy="lossguide", max_bin=64, max_cached_hist_node=256,
+                                              max_leaves=4096)),
+    )
 
-    def _fit_xgb(self, X, y):
+    def fit(self, X, y, X_val=None, y_val=None):
+        last = None
+        for label, extra in self.ATTEMPTS:
+            try:
+                self._fit_xgb(X, y, extra)
+                self.backend = label if self.device == "cuda" else label.replace("cuda", self.device)
+                return self
+            except Exception as exc:  # e.g. GPU out of memory -> try the next, smaller configuration
+                last = exc
+                print(f"[RandomForest] XGBoost {label} failed: {str(exc).splitlines()[0][:160]}")
+                self.estimator = None
+                _free_gpu_memory()
+        print(f"[RandomForest] all GPU attempts failed ({str(last)[:80]}) -> falling back to sklearn on CPU")
+        fallback = _make_sklearn_rf(self.task, self.seed)
+        fallback.fit(X, y)
+        self.estimator, self.backend = fallback.estimator, "sklearn(fallback)"
+        return self
+
+    def _fit_xgb(self, X, y, extra: dict):
         from xgboost import XGBRFClassifier, XGBRFRegressor
 
         Xf = flatten_sequences(X)
         y = np.asarray(y).ravel()
         common = dict(n_estimators=100, max_depth=16, learning_rate=1.0, subsample=0.632,
-                      tree_method="hist", max_bin=256, device=self.device, random_state=self.seed,
-                      n_jobs=-1, verbosity=0)
+                      tree_method="hist", device=self.device, random_state=self.seed,
+                      n_jobs=-1, verbosity=0, **extra)
         if self.task == "classification":
             p = Xf.shape[1]
             self.estimator = XGBRFClassifier(colsample_bynode=max(1.0 / p, float(np.sqrt(p)) / p), **common)

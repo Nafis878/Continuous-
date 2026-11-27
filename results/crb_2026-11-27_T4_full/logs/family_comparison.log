@@ -1,0 +1,666 @@
+
+===== RUL family :: CMAPSS-FD001 (seed=42) =====
+windows train/val/test_cont/test_last: 15332 / 2399 / 10196 / 100
+  -> LSTM ...
+     continuous RMSE=17.165  MAE=12.688  R²=0.667  last-window RMSE=15.527
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [10:11:27] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.92169GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=17.406  MAE=13.358  R²=0.657  last-window RMSE=16.516
+  -> GradientBoosting ...
+     continuous RMSE=15.727  MAE=11.973  R²=0.720  last-window RMSE=15.041
+  -> Linear ...
+     continuous RMSE=16.250  MAE=13.166  R²=0.701  last-window RMSE=15.181
+  -> MeanRUL ...
+     continuous RMSE=37.579  MAE=34.815  R²=-0.598  last-window RMSE=40.670
+
+===== RUL family :: CMAPSS-FD002 (seed=42) =====
+windows train/val/test_cont/test_last: 39424 / 6795 / 26654 / 259
+  -> LSTM ...
+     continuous RMSE=20.455  MAE=16.726  R²=0.563  last-window RMSE=16.800
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [10:19:29] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.48419GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=19.775  MAE=16.345  R²=0.592  last-window RMSE=17.310
+  -> GradientBoosting ...
+     continuous RMSE=19.145  MAE=15.416  R²=0.617  last-window RMSE=17.144
+  -> Linear ...
+     continuous RMSE=18.611  MAE=15.223  R²=0.638  last-window RMSE=16.519
+  -> MeanRUL ...
+     continuous RMSE=38.078  MAE=35.129  R²=-0.514  last-window RMSE=43.540
+
+===== RUL family :: CMAPSS-FD003 (seed=42) =====
+windows train/val/test_cont/test_last: 18749 / 3071 / 13696 / 100
+  -> LSTM ...
+     continuous RMSE=13.837  MAE=7.945  R²=0.729  last-window RMSE=14.506
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [10:47:47] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.50177GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=13.875  MAE=9.554  R²=0.728  last-window RMSE=17.191
+  -> GradientBoosting ...
+     continuous RMSE=12.596  MAE=8.304  R²=0.776  last-window RMSE=16.249
+  -> Linear ...
+     continuous RMSE=15.817  MAE=12.387  R²=0.646  last-window RMSE=16.566
+  -> MeanRUL ...
+     continuous RMSE=33.484  MAE=31.270  R²=-0.586  last-window RMSE=42.137
+
+===== RUL family :: CMAPSS-FD004 (seed=42) =====
+windows train/val/test_cont/test_last: 45594 / 8434 / 34341 / 248
+  -> LSTM ...
+     continuous RMSE=16.767  MAE=10.805  R²=0.621  last-window RMSE=18.674
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [10:57:49] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.47833GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=17.996  MAE=13.139  R²=0.564  last-window RMSE=19.321
+  -> GradientBoosting ...
+     continuous RMSE=16.932  MAE=11.906  R²=0.614  last-window RMSE=18.528
+  -> Linear ...
+     continuous RMSE=17.948  MAE=14.003  R²=0.566  last-window RMSE=19.403
+  -> MeanRUL ...
+     continuous RMSE=34.870  MAE=32.842  R²=-0.639  last-window RMSE=44.257
+
+===== RUL family :: PHM08 (seed=42) =====
+note: Official test RUL hidden; held-out train units, each cut at 5 random cycles before failure.
+windows train/val/test_cont/test_last: 25958 / 5519 / 8119 / 215
+  -> LSTM ...
+     continuous RMSE=16.156  MAE=11.781  R²=0.851  last-window RMSE=17.462
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [11:31:26] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.492GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=18.376  MAE=14.937  R²=0.807  last-window RMSE=19.867
+  -> GradientBoosting ...
+     continuous RMSE=17.073  MAE=13.425  R²=0.834  last-window RMSE=18.011
+  -> Linear ...
+     continuous RMSE=16.869  MAE=13.670  R²=0.838  last-window RMSE=18.045
+  -> MeanRUL ...
+     continuous RMSE=41.894  MAE=37.416  R²=-0.002  last-window RMSE=42.669
+
+===== RUL family :: N-CMAPSS-DS01-005 (seed=42) =====
+windows train/val/test_cont/test_last: 363 / 76 / 265 / 0
+  -> LSTM ...
+     continuous RMSE=7.545  MAE=5.451  R²=0.848
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+     continuous RMSE=13.474  MAE=11.614  R²=0.516
+  -> GradientBoosting ...
+     continuous RMSE=11.815  MAE=9.569  R²=0.628
+  -> Linear ...
+     continuous RMSE=13.033  MAE=10.741  R²=0.547
+  -> MeanRUL ...
+     continuous RMSE=19.701  MAE=16.917  R²=-0.035
+
+===== RUL family :: CMAPSS-FD001 (seed=43) =====
+windows train/val/test_cont/test_last: 15332 / 2399 / 10196 / 100
+  -> LSTM ...
+     continuous RMSE=16.390  MAE=12.361  R²=0.696  last-window RMSE=14.088
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [11:50:23] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.50177GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=17.447  MAE=13.371  R²=0.656  last-window RMSE=16.632
+  -> GradientBoosting ...
+     continuous RMSE=15.707  MAE=11.966  R²=0.721  last-window RMSE=14.650
+  -> Linear ...
+     continuous RMSE=16.250  MAE=13.166  R²=0.701  last-window RMSE=15.181
+  -> MeanRUL ...
+     continuous RMSE=37.579  MAE=34.815  R²=-0.598  last-window RMSE=40.670
+
+===== RUL family :: CMAPSS-FD002 (seed=43) =====
+windows train/val/test_cont/test_last: 39424 / 6795 / 26654 / 259
+  -> LSTM ...
+     continuous RMSE=18.431  MAE=14.126  R²=0.645  last-window RMSE=16.552
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [11:58:41] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.48224GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=19.842  MAE=16.393  R²=0.589  last-window RMSE=17.556
+  -> GradientBoosting ...
+     continuous RMSE=19.098  MAE=15.374  R²=0.619  last-window RMSE=16.870
+  -> Linear ...
+     continuous RMSE=18.611  MAE=15.223  R²=0.638  last-window RMSE=16.519
+  -> MeanRUL ...
+     continuous RMSE=38.078  MAE=35.129  R²=-0.514  last-window RMSE=43.540
+
+===== RUL family :: CMAPSS-FD003 (seed=43) =====
+windows train/val/test_cont/test_last: 18749 / 3071 / 13696 / 100
+  -> LSTM ...
+     continuous RMSE=13.737  MAE=8.520  R²=0.733  last-window RMSE=16.518
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [12:27:32] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.49982GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=13.894  MAE=9.543  R²=0.727  last-window RMSE=17.103
+  -> GradientBoosting ...
+     continuous RMSE=12.597  MAE=8.342  R²=0.775  last-window RMSE=16.411
+  -> Linear ...
+     continuous RMSE=15.817  MAE=12.387  R²=0.646  last-window RMSE=16.566
+  -> MeanRUL ...
+     continuous RMSE=33.484  MAE=31.270  R²=-0.586  last-window RMSE=42.137
+
+===== RUL family :: CMAPSS-FD004 (seed=43) =====
+windows train/val/test_cont/test_last: 45594 / 8434 / 34341 / 248
+  -> LSTM ...
+     continuous RMSE=17.480  MAE=11.235  R²=0.588  last-window RMSE=21.009
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [12:37:44] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.47833GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=18.018  MAE=13.131  R²=0.562  last-window RMSE=19.275
+  -> GradientBoosting ...
+     continuous RMSE=16.933  MAE=11.925  R²=0.614  last-window RMSE=18.578
+  -> Linear ...
+     continuous RMSE=17.948  MAE=14.003  R²=0.566  last-window RMSE=19.403
+  -> MeanRUL ...
+     continuous RMSE=34.870  MAE=32.842  R²=-0.639  last-window RMSE=44.257
+
+===== RUL family :: PHM08 (seed=43) =====
+note: Official test RUL hidden; held-out train units, each cut at 5 random cycles before failure.
+windows train/val/test_cont/test_last: 25958 / 5519 / 8119 / 215
+  -> LSTM ...
+     continuous RMSE=15.961  MAE=11.422  R²=0.855  last-window RMSE=17.305
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [13:11:10] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.492GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=18.451  MAE=15.063  R²=0.806  last-window RMSE=19.909
+  -> GradientBoosting ...
+     continuous RMSE=17.039  MAE=13.428  R²=0.834  last-window RMSE=18.178
+  -> Linear ...
+     continuous RMSE=16.869  MAE=13.670  R²=0.838  last-window RMSE=18.045
+  -> MeanRUL ...
+     continuous RMSE=41.894  MAE=37.416  R²=-0.002  last-window RMSE=42.669
+
+===== RUL family :: N-CMAPSS-DS01-005 (seed=43) =====
+windows train/val/test_cont/test_last: 363 / 76 / 265 / 0
+  -> LSTM ...
+     continuous RMSE=8.030  MAE=5.851  R²=0.828
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+     continuous RMSE=13.234  MAE=11.341  R²=0.533
+  -> GradientBoosting ...
+     continuous RMSE=11.815  MAE=9.569  R²=0.628
+  -> Linear ...
+     continuous RMSE=13.033  MAE=10.741  R²=0.547
+  -> MeanRUL ...
+     continuous RMSE=19.701  MAE=16.917  R²=-0.035
+
+===== RUL family :: CMAPSS-FD001 (seed=44) =====
+windows train/val/test_cont/test_last: 15332 / 2399 / 10196 / 100
+  -> LSTM ...
+     continuous RMSE=16.214  MAE=11.036  R²=0.702  last-window RMSE=15.122
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [13:29:51] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.50177GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=17.411  MAE=13.359  R²=0.657  last-window RMSE=16.234
+  -> GradientBoosting ...
+     continuous RMSE=15.761  MAE=12.008  R²=0.719  last-window RMSE=14.531
+  -> Linear ...
+     continuous RMSE=16.250  MAE=13.166  R²=0.701  last-window RMSE=15.181
+  -> MeanRUL ...
+     continuous RMSE=37.579  MAE=34.815  R²=-0.598  last-window RMSE=40.670
+
+===== RUL family :: CMAPSS-FD002 (seed=44) =====
+windows train/val/test_cont/test_last: 39424 / 6795 / 26654 / 259
+  -> LSTM ...
+     continuous RMSE=18.294  MAE=14.289  R²=0.651  last-window RMSE=15.501
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [13:37:47] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.48224GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=19.829  MAE=16.370  R²=0.589  last-window RMSE=17.404
+  -> GradientBoosting ...
+     continuous RMSE=19.106  MAE=15.383  R²=0.619  last-window RMSE=16.979
+  -> Linear ...
+     continuous RMSE=18.611  MAE=15.223  R²=0.638  last-window RMSE=16.519
+  -> MeanRUL ...
+     continuous RMSE=38.078  MAE=35.129  R²=-0.514  last-window RMSE=43.540
+
+===== RUL family :: CMAPSS-FD003 (seed=44) =====
+windows train/val/test_cont/test_last: 18749 / 3071 / 13696 / 100
+  -> LSTM ...
+     continuous RMSE=13.974  MAE=8.438  R²=0.724  last-window RMSE=14.279
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [14:05:28] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.49982GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=13.904  MAE=9.563  R²=0.726  last-window RMSE=17.122
+  -> GradientBoosting ...
+     continuous RMSE=12.577  MAE=8.260  R²=0.776  last-window RMSE=16.289
+  -> Linear ...
+     continuous RMSE=15.817  MAE=12.387  R²=0.646  last-window RMSE=16.566
+  -> MeanRUL ...
+     continuous RMSE=33.484  MAE=31.270  R²=-0.586  last-window RMSE=42.137
+
+===== RUL family :: CMAPSS-FD004 (seed=44) =====
+windows train/val/test_cont/test_last: 45594 / 8434 / 34341 / 248
+  -> LSTM ...
+     continuous RMSE=16.942  MAE=10.761  R²=0.613  last-window RMSE=18.924
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [14:15:21] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.47833GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=18.049  MAE=13.147  R²=0.561  last-window RMSE=19.532
+  -> GradientBoosting ...
+     continuous RMSE=16.964  MAE=11.994  R²=0.612  last-window RMSE=18.624
+  -> Linear ...
+     continuous RMSE=17.948  MAE=14.003  R²=0.566  last-window RMSE=19.403
+  -> MeanRUL ...
+     continuous RMSE=34.870  MAE=32.842  R²=-0.639  last-window RMSE=44.257
+
+===== RUL family :: PHM08 (seed=44) =====
+note: Official test RUL hidden; held-out train units, each cut at 5 random cycles before failure.
+windows train/val/test_cont/test_last: 25958 / 5519 / 8119 / 215
+  -> LSTM ...
+     continuous RMSE=15.871  MAE=12.728  R²=0.856  last-window RMSE=16.878
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+[RandomForest] XGBoost (cuda) failed: [14:48:11] /__w/xgboost/xgboost/src/common/device_vector.cu:53: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 5.492GB
+- Requested memory: 16GB
+- Reserved by the pool: 0B
+- Used by the pool: 0B
+
+Stack trace:
+  [bt] (0) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x21ec5c) [0x7bff8161ec5c]
+  [bt] (1) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xaaf3a6) [0x7bff81eaf3a6]
+  [bt] (2) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0xb98636) [0x7bff81f98636]
+  [bt] (3) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195747) [0x7bff82595747]
+  [bt] (4) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x1195c5c) [0x7bff82595c5c]
+  [bt] (5) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x11973dc) [0x7bff825973dc]
+  [bt] (6) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119bbed) [0x7bff8259bbed]
+  [bt] (7) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x119e722) [0x7bff8259e722]
+  [bt] (8) /usr/local/lib/python3.13/dist-packages/xgboost/lib/libxgboost.so(+0x640621) [0x7bff81a40621]
+
+ -> falling back to sklearn on CPU
+     continuous RMSE=18.377  MAE=14.923  R²=0.807  last-window RMSE=19.953
+  -> GradientBoosting ...
+     continuous RMSE=17.125  MAE=13.458  R²=0.833  last-window RMSE=18.576
+  -> Linear ...
+     continuous RMSE=16.869  MAE=13.670  R²=0.838  last-window RMSE=18.045
+  -> MeanRUL ...
+     continuous RMSE=41.894  MAE=37.416  R²=-0.002  last-window RMSE=42.669
+
+===== RUL family :: N-CMAPSS-DS01-005 (seed=44) =====
+windows train/val/test_cont/test_last: 363 / 76 / 265 / 0
+  -> LSTM ...
+     continuous RMSE=9.257  MAE=7.014  R²=0.771
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFRegressor` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+     continuous RMSE=13.325  MAE=11.345  R²=0.526
+  -> GradientBoosting ...
+     continuous RMSE=11.815  MAE=9.569  R²=0.628
+  -> Linear ...
+     continuous RMSE=13.033  MAE=10.741  R²=0.547
+  -> MeanRUL ...
+     continuous RMSE=19.701  MAE=16.917  R²=-0.035
+[SCANIA] Loading operational readouts (selected 3500 train vehicles)...
+
+===== SCANIA family :: Component-X classification (seed=42) =====
+primary metric: Total_cost (IDA challenge cost matrix; lower is better)
+balanced train: (10000, 8, 198) class counts={np.int64(0): np.int64(2000), np.int64(1): np.int64(2000), np.int64(2): np.int64(2000), np.int64(3): np.int64(2000), np.int64(4): np.int64(2000)}
+  -> LSTM ...
+     Cost=57252  F1_macro=0.1123  Acc=0.3334  R1-4=[0.19,0.47,0.10,0.15]
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFClassifier` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+     Cost=53228  F1_macro=0.1658  Acc=0.6103  R1-4=[0.35,0.00,0.02,0.22]
+  -> GradientBoosting ...
+     Cost=53298  F1_macro=0.2039  Acc=0.9080  R1-4=[0.04,0.00,0.00,0.12]
+  -> Linear ...
+/usr/local/lib/python3.13/dist-packages/sklearn/linear_model/_logistic.py:465: ConvergenceWarning: lbfgs failed to converge (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT.
+
+Increase the number of iterations (max_iter) or scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+     Cost=59363  F1_macro=0.0723  Acc=0.1788  R1-4=[0.46,0.07,0.02,0.35]
+  -> Always-0 ...
+     Cost=56100  F1_macro=0.1971  Acc=0.9719  R1-4=[0.00,0.00,0.00,0.00]
+  -> Always-4 ...
+     Cost=49671  F1_macro=0.0047  Acc=0.0119  R1-4=[0.00,0.00,0.00,1.00]
+
+===== SCANIA family :: Component-X classification (seed=43) =====
+primary metric: Total_cost (IDA challenge cost matrix; lower is better)
+balanced train: (10000, 8, 198) class counts={np.int64(0): np.int64(2000), np.int64(1): np.int64(2000), np.int64(2): np.int64(2000), np.int64(3): np.int64(2000), np.int64(4): np.int64(2000)}
+  -> LSTM ...
+     Cost=53677  F1_macro=0.0722  Acc=0.1721  R1-4=[0.31,0.00,0.37,0.27]
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFClassifier` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+     Cost=54666  F1_macro=0.1629  Acc=0.5907  R1-4=[0.42,0.00,0.02,0.17]
+  -> GradientBoosting ...
+     Cost=55620  F1_macro=0.2046  Acc=0.9118  R1-4=[0.00,0.00,0.02,0.05]
+  -> Linear ...
+/usr/local/lib/python3.13/dist-packages/sklearn/linear_model/_logistic.py:465: ConvergenceWarning: lbfgs failed to converge (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT.
+
+Increase the number of iterations (max_iter) or scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+     Cost=54178  F1_macro=0.0691  Acc=0.1717  R1-4=[0.35,0.07,0.02,0.52]
+  -> Always-0 ...
+     Cost=56100  F1_macro=0.1971  Acc=0.9719  R1-4=[0.00,0.00,0.00,0.00]
+  -> Always-4 ...
+     Cost=49671  F1_macro=0.0047  Acc=0.0119  R1-4=[0.00,0.00,0.00,1.00]
+
+===== SCANIA family :: Component-X classification (seed=44) =====
+primary metric: Total_cost (IDA challenge cost matrix; lower is better)
+balanced train: (10000, 8, 198) class counts={np.int64(0): np.int64(2000), np.int64(1): np.int64(2000), np.int64(2): np.int64(2000), np.int64(3): np.int64(2000), np.int64(4): np.int64(2000)}
+  -> LSTM ...
+     Cost=55745  F1_macro=0.1207  Acc=0.3796  R1-4=[0.19,0.27,0.02,0.22]
+  -> RandomForest ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFClassifier` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+     Cost=52052  F1_macro=0.1687  Acc=0.6178  R1-4=[0.35,0.07,0.02,0.23]
+  -> GradientBoosting ...
+     Cost=54535  F1_macro=0.1982  Acc=0.8997  R1-4=[0.00,0.00,0.00,0.10]
+  -> Linear ...
+/usr/local/lib/python3.13/dist-packages/sklearn/linear_model/_logistic.py:465: ConvergenceWarning: lbfgs failed to converge (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT.
+
+Increase the number of iterations (max_iter) or scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+     Cost=49915  F1_macro=0.1155  Acc=0.3417  R1-4=[0.15,0.20,0.02,0.50]
+  -> Always-0 ...
+     Cost=56100  F1_macro=0.1971  Acc=0.9719  R1-4=[0.00,0.00,0.00,0.00]
+  -> Always-4 ...
+     Cost=49671  F1_macro=0.0047  Acc=0.0119  R1-4=[0.00,0.00,0.00,1.00]
+
+========== SCANIA (mean over seeds; lowest Total_cost first) ==========
+           model  total_cost_mean  total_cost_std  f1_macro_mean  cost_vs_always4_pct
+        Always-4     49671.000000        0.000000       0.004701             0.000000
+    RandomForest     53315.333333     1309.186516       0.165803             7.336944
+GradientBoosting     54484.333333     1161.828874       0.202217             9.690430
+          Linear     54485.333333     4731.491978       0.085638             9.692443
+            LSTM     55558.000000     1794.821161       0.101743            11.851986
+        Always-0     56100.000000        0.000000       0.197145            12.943166
+
+========== RUL FAMILY (continuous RMSE, mean over seeds) ==========
+          dataset            model  rmse_mean  rmse_std   r2_mean  last_rmse_mean  rank
+     CMAPSS-FD001 GradientBoosting  15.731872  0.027460  0.719922       14.740752   1.0
+     CMAPSS-FD001           Linear  16.249723  0.000000  0.701180       15.180945   2.0
+     CMAPSS-FD001             LSTM  16.589957  0.505931  0.688343       14.912156   3.0
+     CMAPSS-FD001     RandomForest  17.421042  0.022279  0.656548       16.460551   4.0
+     CMAPSS-FD001          MeanRUL  37.578939  0.000000 -0.598108       40.669943   5.0
+     CMAPSS-FD002           Linear  18.610860  0.000000  0.638351       16.519415   1.0
+     CMAPSS-FD002             LSTM  19.059957  1.210183  0.619667       16.284225   2.0
+     CMAPSS-FD002 GradientBoosting  19.116296  0.025632  0.618440       16.997508   3.0
+     CMAPSS-FD002     RandomForest  19.815290  0.035289  0.590026       17.423323   4.0
+     CMAPSS-FD002          MeanRUL  38.078199  0.000000 -0.513935       43.539739   5.0
+     CMAPSS-FD003 GradientBoosting  12.590227  0.011301  0.775736       16.316192   1.0
+     CMAPSS-FD003             LSTM  13.849620  0.119264  0.728613       15.101345   2.0
+     CMAPSS-FD003     RandomForest  13.891051  0.014737  0.727000       17.138807   3.0
+     CMAPSS-FD003           Linear  15.816902  0.000000  0.646056       16.566458   4.0
+     CMAPSS-FD003          MeanRUL  33.484470  0.000000 -0.586277       42.137185   5.0
+     CMAPSS-FD004 GradientBoosting  16.942804  0.018344  0.613147       18.576913   1.0
+     CMAPSS-FD004             LSTM  17.063222  0.371817  0.607504       19.535395   2.0
+     CMAPSS-FD004           Linear  17.948396  0.000000  0.565863       19.402577   3.0
+     CMAPSS-FD004     RandomForest  18.021174  0.026374  0.562335       19.375968   4.0
+     CMAPSS-FD004          MeanRUL  34.869781  0.000000 -0.638604       44.256954   5.0
+N-CMAPSS-DS01-005             LSTM   8.277243  0.882239  0.815902             NaN   1.0
+N-CMAPSS-DS01-005 GradientBoosting  11.814647  0.000000  0.627743             NaN   2.0
+N-CMAPSS-DS01-005           Linear  13.032898  0.000000  0.547015             NaN   3.0
+N-CMAPSS-DS01-005     RandomForest  13.344376  0.121278  0.525078             NaN   4.0
+N-CMAPSS-DS01-005          MeanRUL  19.700593  0.000000 -0.035047             NaN   5.0
+            PHM08             LSTM  15.996062  0.145829  0.853970       17.215038   1.0
+            PHM08           Linear  16.868670  0.000000  0.837612       18.044588   2.0
+            PHM08 GradientBoosting  17.079013  0.043313  0.833536       18.254753   3.0
+            PHM08     RandomForest  18.401077  0.043142  0.806768       19.909577   4.0
+            PHM08          MeanRUL  41.893973  0.000000 -0.001601       42.669318   5.0
+
+Saved -> /content/crb_work/studies/family_comparison

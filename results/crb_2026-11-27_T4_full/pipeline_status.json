@@ -1,0 +1,227 @@
+{
+  "finished": "2026-11-27 15:43:06",
+  "args": {
+    "out": "/content/drive/MyDrive/CRB/results",
+    "quick": false,
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "datasets": null,
+    "models": [
+      "MeanRUL",
+      "Ridge",
+      "HistGB",
+      "LSTM",
+      "BiLSTM-Attn",
+      "CNN1D",
+      "CNN-LSTM",
+      "TCN",
+      "Transformer",
+      "CATT",
+      "CATT+TCT",
+      "TCN+TCT"
+    ],
+    "epochs": null,
+    "skip_smoke": false,
+    "all": true,
+    "with_ncmapss": true,
+    "ncmapss_dir": "/content/N-CMAPSS",
+    "with_tct_ablation": true,
+    "study_seeds": [
+      42,
+      43,
+      44
+    ],
+    "rerun_studies": false,
+    "no_analysis": false,
+    "with_studies": true,
+    "with_scania": true,
+    "with_ablation": true,
+    "keep_going": false,
+    "install": true,
+    "dry_run": false,
+    "work_dir": null,
+    "sync_every": 120,
+    "sync_only": false,
+    "rf_backend": "gpu",
+    "parallel_studies": 1,
+    "resume_from": "results/crb_2026-11-24_T4"
+  },
+  "stages": [
+    {
+      "stage": "pip_install",
+      "status": "ok",
+      "minutes": 0.03,
+      "cmd": [
+        "/usr/bin/python3",
+        "-m",
+        "pip",
+        "install",
+        "-q",
+        "-r",
+        "/content/Continuous/ml_pipeline/requirements.txt"
+      ]
+    },
+    {
+      "stage": "env",
+      "status": "ok",
+      "gpu": true
+    },
+    {
+      "stage": "ncmapss_download",
+      "status": "ok",
+      "minutes": 15.84,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/datasets/ncmapss_download.py",
+        "--dest",
+        "/content/N-CMAPSS"
+      ]
+    },
+    {
+      "stage": "smoke",
+      "status": "ok",
+      "minutes": 1.78,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/run_benchmark.py",
+        "--out",
+        "/content/crb_work/smoke",
+        "--quick",
+        "--fresh",
+        "--models",
+        "MeanRUL",
+        "Ridge",
+        "HistGB",
+        "LSTM",
+        "BiLSTM-Attn",
+        "CNN1D",
+        "CNN-LSTM",
+        "TCN",
+        "Transformer",
+        "CATT",
+        "CATT+TCT",
+        "TCN+TCT"
+      ]
+    },
+    {
+      "stage": "benchmark",
+      "status": "ok",
+      "minutes": 0.07,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/run_benchmark.py",
+        "--out",
+        "/content/crb_work/benchmark",
+        "--seeds",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "--models",
+        "MeanRUL",
+        "Ridge",
+        "HistGB",
+        "LSTM",
+        "BiLSTM-Attn",
+        "CNN1D",
+        "CNN-LSTM",
+        "TCN",
+        "Transformer",
+        "CATT",
+        "CATT+TCT",
+        "TCN+TCT"
+      ]
+    },
+    {
+      "stage": "tct_ablation",
+      "status": "ok",
+      "minutes": 0.06,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/run_benchmark.py",
+        "--out",
+        "/content/crb_work/tct_ablation",
+        "--seeds",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "--models",
+        "CATT+TCT-noConsistency",
+        "CATT+TCT-noLatePenalty",
+        "CATT+TCT-noSmoothing",
+        "CATT+TCT-lambda0.3",
+        "CATT+TCT-lambda3"
+      ]
+    },
+    {
+      "stage": "scania_data",
+      "status": "ok"
+    },
+    {
+      "stage": "condition_rul",
+      "status": "skipped: already complete (family_comparison/condition_rul_summary.json exists; --rerun-studies to redo)"
+    },
+    {
+      "stage": "n_cmapss_multi",
+      "status": "skipped: already complete (family_comparison/n_cmapss_multi_summary.json exists; --rerun-studies to redo)"
+    },
+    {
+      "stage": "family_comparison",
+      "status": "ok",
+      "minutes": 304.65,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/run_family_comparison.py",
+        "--seeds",
+        "42",
+        "43",
+        "44"
+      ]
+    },
+    {
+      "stage": "scania_cost_tune",
+      "status": "ok",
+      "minutes": 7.77,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/run_scania_cost_tune.py",
+        "--seeds",
+        "42",
+        "43",
+        "44"
+      ]
+    },
+    {
+      "stage": "ablation",
+      "status": "ok",
+      "minutes": 19.68,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/run_ablation.py"
+      ]
+    },
+    {
+      "stage": "analysis",
+      "status": "ok",
+      "minutes": 0.04,
+      "cmd": [
+        "/usr/bin/python3",
+        "/content/Continuous/ml_pipeline/analyze_results.py",
+        "--runs",
+        "/content/crb_work/benchmark/runs.csv",
+        "--out",
+        "/content/crb_work/analysis",
+        "--ablation-runs",
+        "/content/crb_work/tct_ablation/runs.csv"
+      ]
+    }
+  ]
+}

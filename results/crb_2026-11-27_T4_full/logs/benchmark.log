@@ -1,0 +1,25 @@
+CRB | device=cuda (Tesla T4) | torch 2.14.1+cu130 | seeds=[42, 43, 44, 45, 46] | epochs=40 | quick=False
+models: ['MeanRUL', 'Ridge', 'HistGB', 'LSTM', 'BiLSTM-Attn', 'CNN1D', 'CNN-LSTM', 'TCN', 'Transformer', 'CATT', 'CATT+TCT', 'TCN+TCT']
+output: /content/crb_work/benchmark  (resuming 630 finished runs)
+
+=== FD001: all runs already done ===
+
+=== FD002: all runs already done ===
+
+=== FD003: all runs already done ===
+
+=== FD004: all runs already done ===
+
+=== PHM08: all runs already done ===
+
+=== NCMAPSS-DS01: all runs already done ===
+
+=== NCMAPSS-DS02: all runs already done ===
+
+=== NCMAPSS-DS03: all runs already done ===
+
+=== NCMAPSS-DS05: all runs already done ===
+
+=== NCMAPSS-DS07: all runs already done ===
+
+Done in 0.0 min. Leaderboard: /content/crb_work/benchmark/LEADERBOARD.md

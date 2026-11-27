@@ -1,0 +1,39 @@
+[N-CMAPSS] streaming https://phm-datasets.s3.amazonaws.com/NASA/17.+Turbofan+Engine+Degradation+Simulation+Data+Set+2.zip
+[N-CMAPSS] extracting ['N-CMAPSS_DS01-005.h5', 'N-CMAPSS_DS02-006.h5', 'N-CMAPSS_DS03-012.h5', 'N-CMAPSS_DS05.h5', 'N-CMAPSS_DS07.h5'] -> /content/N-CMAPSS
+[N-CMAPSS] extracting N-CMAPSS_DS01-005.h5 (2.87 GB) ...
+    N-CMAPSS_DS01-005.h5:  18.5%  (download 13 MB/s)
+    N-CMAPSS_DS01-005.h5:  33.8%  (download 13 MB/s)
+    N-CMAPSS_DS01-005.h5:  67.1%  (download 11 MB/s)
+    N-CMAPSS_DS01-005.h5:  81.8%  (download 12 MB/s)
+[N-CMAPSS] OK N-CMAPSS_DS01-005.h5 (2.87 GB, CRC verified) [2.3 min]
+[N-CMAPSS] extracting N-CMAPSS_DS02-006.h5 (2.45 GB) ...
+    N-CMAPSS_DS02-006.h5:  22.9%  (download 12 MB/s)
+    N-CMAPSS_DS02-006.h5:  40.1%  (download 12 MB/s)
+    N-CMAPSS_DS02-006.h5:  82.2%  (download 12 MB/s)
+[N-CMAPSS] OK N-CMAPSS_DS02-006.h5 (2.45 GB, CRC verified) [4.2 min]
+[N-CMAPSS] extracting N-CMAPSS_DS03-012.h5 (3.69 GB) ...
+    N-CMAPSS_DS03-012.h5:  14.2%  (download 12 MB/s)
+    N-CMAPSS_DS03-012.h5:  26.1%  (download 12 MB/s)
+    N-CMAPSS_DS03-012.h5:  37.9%  (download 12 MB/s)
+    N-CMAPSS_DS03-012.h5:  67.4%  (download 12 MB/s)
+    N-CMAPSS_DS03-012.h5:  79.3%  (download 12 MB/s)
+[N-CMAPSS] OK N-CMAPSS_DS03-012.h5 (3.69 GB, CRC verified) [7.2 min]
+[N-CMAPSS] skip N-CMAPSS_DS04.h5 (not requested)
+[N-CMAPSS] extracting N-CMAPSS_DS05.h5 (2.60 GB) ...
+    N-CMAPSS_DS05.h5:  20.1%  (download 12 MB/s)
+    N-CMAPSS_DS05.h5:  36.9%  (download 12 MB/s)
+    N-CMAPSS_DS05.h5:  69.0%  (download 12 MB/s)
+    N-CMAPSS_DS05.h5:  85.2%  (download 12 MB/s)
+[N-CMAPSS] OK N-CMAPSS_DS05.h5 (2.60 GB, CRC verified) [12.0 min]
+[N-CMAPSS] skip N-CMAPSS_DS06.h5 (not requested)
+[N-CMAPSS] extracting N-CMAPSS_DS07.h5 (2.71 GB) ...
+    N-CMAPSS_DS07.h5:  18.5%  (download 12 MB/s)
+    N-CMAPSS_DS07.h5:  34.7%  (download 12 MB/s)
+    N-CMAPSS_DS07.h5:  69.8%  (download 12 MB/s)
+    N-CMAPSS_DS07.h5:  85.3%  (download 12 MB/s)
+[N-CMAPSS] OK N-CMAPSS_DS07.h5 (2.71 GB, CRC verified) [15.8 min]
+/content/N-CMAPSS/N-CMAPSS_DS01-005.h5
+/content/N-CMAPSS/N-CMAPSS_DS02-006.h5
+/content/N-CMAPSS/N-CMAPSS_DS03-012.h5
+/content/N-CMAPSS/N-CMAPSS_DS05.h5
+/content/N-CMAPSS/N-CMAPSS_DS07.h5

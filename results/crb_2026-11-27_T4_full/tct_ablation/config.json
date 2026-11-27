@@ -12,24 +12,18 @@
     "NCMAPSS-DS07"
   ],
   "models": [
-    "MeanRUL",
-    "Ridge",
-    "HistGB",
-    "RandomForest",
-    "LSTM",
-    "BiLSTM-Attn",
-    "CNN1D",
-    "CNN-LSTM",
-    "TCN",
-    "Transformer",
-    "CATT",
-    "CATT+TCT",
-    "TCN+TCT"
+    "CATT+TCT-noConsistency",
+    "CATT+TCT-noLatePenalty",
+    "CATT+TCT-noSmoothing",
+    "CATT+TCT-lambda0.3",
+    "CATT+TCT-lambda3"
   ],
   "seeds": [
     42,
     43,
-    44
+    44,
+    45,
+    46
   ],
   "epochs": 40,
   "patience": 8,

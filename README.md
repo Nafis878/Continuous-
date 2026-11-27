@@ -30,7 +30,7 @@ benchmark on CMAPSS FD001–FD004 + PHM08 + N-CMAPSS DS01/02/03/05/07, and all s
 
 | Run | Status |
 |---|---|
-| [`results/crb_2026-11-24_T4`](results/crb_2026-11-24_T4/README.md) | benchmark complete (390/390 runs, 3 seeds, T4); condition-clustering + N-CMAPSS studies complete; SCANIA studies + ablation pending |
+| [`results/crb_2026-11-27_T4_full`](results/crb_2026-11-27_T4_full/README.md) | **complete**: benchmark 630 runs (5 seeds), TCT ablation 250 runs, all studies, statistical analysis (Colab T4) |
 
 To continue from a committed run on any Drive/account, pass `--resume-from results/<run>` (the Colab
 notebook does this by default via `RESUME_FROM`): finished benchmark runs are skipped and only the

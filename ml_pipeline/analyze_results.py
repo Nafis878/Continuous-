@@ -16,7 +16,7 @@ Outputs: <out>/REPORT.md, stats.json, cd_diagram.png, tct_ablation.csv
 5. TCT component ablation: each variant vs CATT+TCT (paired), if provided.
 
 Usage:
-  python ml_pipeline/analyze_results.py --runs results/crb_2026-11-24_T4/benchmark/runs.csv \
+  python ml_pipeline/analyze_results.py --runs results/crb_2026-11-27_T4_full/benchmark/runs.csv \
       [--ablation-runs OUT/tct_ablation/runs.csv] --out OUT/analysis
 """
 
@@ -183,8 +183,8 @@ def main():
 
     # 5. TCT component ablation
     if a.ablation_runs and Path(a.ablation_runs).exists():
-        # reference rows (CATT, CATT+TCT) always come from the main benchmark
-        ab = pd.concat([df[df.model.isin(["CATT", "CATT+TCT"])], load(a.ablation_runs)], ignore_index=True)
+        # reference rows always come from the main benchmark
+        ab = pd.concat([df, load(a.ablation_runs)], ignore_index=True)
         ab = ab.drop_duplicates(["dataset", "model", "seed"], keep="first")
         variants = sorted(v for v in ab.model.unique() if v.startswith("CATT+TCT-")) + ["CATT"]
         rep += ["", "## 5. TCT component ablation (variant minus full CATT+TCT, paired over dataset x seed)", "",
@@ -204,6 +204,58 @@ def main():
         pd.DataFrame(rows).to_csv(out / "tct_ablation.csv", index=False)
         res["tct_ablation"] = rows
         rep += ["", "`*` = p < 0.05 (Wilcoxon signed-rank)."]
+
+        # 6. Smoothing-only baselines
+        smooth = [m for m in ab.model.unique() if m.endswith("+Smooth")]
+        if smooth:
+            rep += ["", "## 6. Smoothing-only baselines (paired over dataset x seed)", "",
+                    "`X+Smooth` = plain model X + the same validation-tuned causal smoothing as TCT, no TCT loss. "
+                    "Rows 'X+Smooth vs X' show what smoothing alone does; 'X+TCT vs X+Smooth' show what TCT adds "
+                    "beyond smoothing. Negative diff = first model lower (better).", "",
+                    "| Comparison | pairs | dRMSE | dRMSE<=30 | dTCE | dLast-PHM |", "|---|---|---|---|---|---|"]
+            res["smoothing_only"] = {}
+            comps = [(m, m.replace("+Smooth", "")) for m in sorted(smooth)]
+            comps += [(f"{base}+TCT", f"{base}+Smooth") for base in ("CATT", "TCN")
+                      if f"{base}+Smooth" in smooth and f"{base}+TCT" in ab.model.unique()]
+            for x, y in comps:
+                cells, rec = [], {}
+                for metric in ("rmse", "rmse_critical", "tce", "last_phm"):
+                    r = paired(ab, x, y, metric)
+                    rec[metric] = r
+                    cells.append("–" if not r else f"{r['mean_diff']:+.2f}{' *' if r['p'] < 0.05 else ''}")
+                n = (rec["rmse"] or {}).get("n_pairs", 0)
+                rep.append(f"| {x} vs {y} | {n} | " + " | ".join(cells) + " |")
+                res["smoothing_only"][f"{x} vs {y}"] = rec
+
+        # 7. Consistency weight lambda selected on VALIDATION (no test information used)
+        cand = {"CATT+TCT-lambda0.3": 0.3, "CATT+TCT": 1.0, "CATT+TCT-lambda3": 3.0}
+        pool = ab[ab.model.isin(cand)].dropna(subset=["val_rmse"])
+        if pool.model.nunique() == len(cand):
+            best = pool.loc[pool.groupby(["dataset", "seed"]).val_rmse.idxmin()].copy()
+            best["lambda"] = best.model.map(cand)
+            best["model"] = "CATT+TCT(val-lambda)"
+            sel = pd.concat([ab, best.drop(columns="lambda")], ignore_index=True)
+            share = best["lambda"].value_counts(normalize=True).sort_index()
+            rep += ["", "## 7. Consistency weight selected on validation", "",
+                    "For every (dataset, seed), lambda in {0.3, 1, 3} is chosen by the lowest **validation** RMSE; "
+                    "the test metrics of that choice are reported as `CATT+TCT(val-lambda)`. "
+                    "Chosen lambda: " + ", ".join(f"{k:g} in {v:.0%}" for k, v in share.items()) + ".", "",
+                    "| Comparison | pairs | dRMSE | dRMSE<=30 | dTCE | dLast-PHM |", "|---|---|---|---|---|---|"]
+            res["val_lambda"] = {"lambda_share": {str(k): float(v) for k, v in share.items()}}
+            for y in ["CATT+TCT", "CATT", "TCN", "Transformer", "LSTM", "BiLSTM-Attn"]:
+                if y not in sel.model.unique():
+                    continue
+                cells, rec = [], {}
+                for metric in ("rmse", "rmse_critical", "tce", "last_phm"):
+                    r = paired(sel, "CATT+TCT(val-lambda)", y, metric)
+                    rec[metric] = r
+                    cells.append("–" if not r else f"{r['mean_diff']:+.2f}{' *' if r['p'] < 0.05 else ''}")
+                n = (rec["rmse"] or {}).get("n_pairs", 0)
+                rep.append(f"| CATT+TCT(val-lambda) vs {y} | {n} | " + " | ".join(cells) + " |")
+                res["val_lambda"][f"vs {y}"] = rec
+            rep += ["", "`*` = p < 0.05, Wilcoxon signed-rank, **not** multiplicity-corrected (6 comparisons)."]
+            best[["dataset", "seed", "lambda", "val_rmse", "rmse", "tce", "rmse_critical", "last_rmse", "last_phm"]] \
+                .to_csv(out / "val_selected_lambda.csv", index=False)
 
     (out / "stats.json").write_text(json.dumps(res, indent=2, default=float))
     (out / "REPORT.md").write_text("\n".join(rep) + "\n", encoding="utf-8")

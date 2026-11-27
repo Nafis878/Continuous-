@@ -53,7 +53,9 @@ REPO = Path(__file__).resolve().parent
 ML = REPO / "ml_pipeline"
 DEFAULT_NCMAPSS_DIR = REPO / "N-CMAPSS" / "data_set"
 TCT_ABLATION_MODELS = ["CATT+TCT-noConsistency", "CATT+TCT-noLatePenalty", "CATT+TCT-noSmoothing",
-                       "CATT+TCT-lambda0.3", "CATT+TCT-lambda3"]
+                       "CATT+TCT-lambda0.3", "CATT+TCT-lambda3",
+                       # smoothing-only baselines (plain model + causal smoothing, no TCT loss)
+                       "CATT+Smooth", "TCN+Smooth", "LSTM+Smooth", "Transformer+Smooth"]
 SCANIA_DATA = REPO / "SCANIA-Component-X" / "data"
 SCANIA_LFS = ["train_operational_readouts.csv", "validation_operational_readouts.csv", "test_operational_readouts.csv"]
 
@@ -416,14 +418,17 @@ class Pipeline:
         print(f"RandomForest backend: {a.rf_backend}  |  parallel study lanes: {a.parallel_studies}  |  "
               f"study seeds: {a.study_seeds}", flush=True)
 
+        checked: dict[str, bool] = {}
+
         def done(name):
-            if a.rerun_studies:
-                return False
-            f = self.out / "studies" / STUDY_DONE[name]
-            if f.exists():
+            if name in checked:  # report each skipped study once
+                return checked[name]
+            res = False
+            if not a.rerun_studies and (self.out / "studies" / STUDY_DONE[name]).exists():
                 self.skip(name, f"already complete ({STUDY_DONE[name]} exists; --rerun-studies to redo)")
-                return True
-            return False
+                res = True
+            checked[name] = res
+            return res
 
         need_scania = (a.with_scania and not (done("family_comparison") & done("scania_cost_tune"))) or \
             (a.with_ablation and not done("ablation"))
@@ -591,7 +596,7 @@ def parse_args(argv=None):
     ap.add_argument("--with-ncmapss", action="store_true", help="download N-CMAPSS (~15 GB) and include it")
     ap.add_argument("--ncmapss-dir", help=f"where N-CMAPSS .h5 files live / are downloaded (default {DEFAULT_NCMAPSS_DIR})")
     ap.add_argument("--with-tct-ablation", action="store_true",
-                    help="TCT component ablation (CATT+TCT variants) -> OUT/tct_ablation")
+                    help="TCT component ablation (CATT+TCT variants) + smoothing-only baselines -> OUT/tct_ablation")
     ap.add_argument("--study-seeds", type=int, nargs="+", default=[42, 43, 44],
                     help="seeds for the optional studies (default 42 43 44)")
     ap.add_argument("--rerun-studies", action="store_true", help="re-run studies that are already complete")
@@ -611,7 +616,7 @@ def parse_args(argv=None):
                          "random forest on CUDA (much faster on Colab T4). The benchmark always uses sklearn.")
     ap.add_argument("--parallel-studies", type=int, choices=[1, 2], default=1,
                     help="run the two independent study lanes at the same time (2) or one after another (1)")
-    ap.add_argument("--resume-from", help="earlier results folder to start from, e.g. results/crb_2026-11-24_T4 "
+    ap.add_argument("--resume-from", help="earlier results folder to start from, e.g. results/crb_2026-11-27_T4_full "
                                           "(finished benchmark runs are skipped)")
     a = ap.parse_args(argv)
     if a.all:

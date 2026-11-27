@@ -63,6 +63,14 @@ TCT_ABLATION = {
     "CATT+TCT-lambda0.3": dict(TCT, consistency=0.3),       # weaker consistency weight
     "CATT+TCT-lambda3": dict(TCT, consistency=3.0),         # stronger consistency weight
 }
+# Smoothing-only baselines: the plain model + the same validation-tuned causal smoothing as TCT,
+# without the consistency loss or late penalty. Answers "does TCT add anything beyond smoothing?"
+SMOOTH_ONLY = {
+    "CATT+Smooth": ("catt", True, {}),
+    "TCN+Smooth": ("tcn", False, {}),
+    "LSTM+Smooth": ("lstm", False, {"hidden": 64, "layers": 2}),
+    "Transformer+Smooth": ("transformer", False, {}),
+}
 
 
 def make_model(name: str, seed: int, bundle: dict, epochs: int, patience: int):
@@ -85,6 +93,9 @@ def make_model(name: str, seed: int, bundle: dict, epochs: int, patience: int):
     }
     for abl_name, abl_cfg in TCT_ABLATION.items():
         registry[abl_name] = (lambda cfg=abl_cfg: DeepRUL("catt", cond, **deep, **cfg))
+    for sm_name, (arch, uses_cond, kw) in SMOOTH_ONLY.items():
+        registry[sm_name] = (lambda a=arch, c=uses_cond, k=kw:
+                             DeepRUL(a, {**k, **(cond if c else {})}, **deep, smoothing="auto"))
     if name not in registry:
         raise SystemExit(f"Unknown model {name!r}. Available: {', '.join(registry)}")
     return registry[name]()

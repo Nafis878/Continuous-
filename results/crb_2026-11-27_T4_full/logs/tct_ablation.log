@@ -1,0 +1,25 @@
+CRB | device=cuda (Tesla T4) | torch 2.14.1+cu130 | seeds=[42, 43, 44, 45, 46] | epochs=40 | quick=False
+models: ['CATT+TCT-noConsistency', 'CATT+TCT-noLatePenalty', 'CATT+TCT-noSmoothing', 'CATT+TCT-lambda0.3', 'CATT+TCT-lambda3']
+output: /content/crb_work/tct_ablation  (resuming 250 finished runs)
+
+=== FD001: all runs already done ===
+
+=== FD002: all runs already done ===
+
+=== FD003: all runs already done ===
+
+=== FD004: all runs already done ===
+
+=== PHM08: all runs already done ===
+
+=== NCMAPSS-DS01: all runs already done ===
+
+=== NCMAPSS-DS02: all runs already done ===
+
+=== NCMAPSS-DS03: all runs already done ===
+
+=== NCMAPSS-DS05: all runs already done ===
+
+=== NCMAPSS-DS07: all runs already done ===
+
+Done in 0.0 min. Leaderboard: /content/crb_work/tct_ablation/LEADERBOARD.md

@@ -1,0 +1,47 @@
+{
+  "datasets": [
+    "FD001",
+    "FD002",
+    "FD003",
+    "FD004",
+    "PHM08",
+    "NCMAPSS-DS01",
+    "NCMAPSS-DS02",
+    "NCMAPSS-DS03",
+    "NCMAPSS-DS05",
+    "NCMAPSS-DS07"
+  ],
+  "models": [
+    "MeanRUL",
+    "Ridge",
+    "HistGB",
+    "LSTM",
+    "BiLSTM-Attn",
+    "CNN1D",
+    "CNN-LSTM",
+    "TCN",
+    "Transformer",
+    "CATT",
+    "CATT+TCT",
+    "TCN+TCT"
+  ],
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "epochs": 40,
+  "patience": 8,
+  "quick": false,
+  "tct": {
+    "consistency": 1.0,
+    "max_offset": 10,
+    "late_penalty": 0.5,
+    "smoothing": "auto"
+  },
+  "device": "cuda",
+  "gpu": "Tesla T4",
+  "torch": "2.14.1+cu130"
+}

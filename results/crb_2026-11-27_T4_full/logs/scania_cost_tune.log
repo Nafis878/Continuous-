@@ -1,0 +1,34 @@
+[SCANIA] Loading operational readouts (selected 3500 train vehicles)...
+-> LSTM (seed=42): fit ...
+   val argmax=65297 decode=55546 -> cost_decode; test cost=51489 F1=0.0290
+-> RandomForest (seed=42): fit ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFClassifier` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+   val argmax=59465 decode=49566 -> cost_decode; test cost=49671 F1=0.0047
+-> GradientBoosting (seed=42): fit ...
+   val argmax=56107 decode=49849 -> cost_decode; test cost=49052 F1=0.0939
+-> LSTM (seed=43): fit ...
+   val argmax=58294 decode=50164 -> cost_decode; test cost=50198 F1=0.0086
+-> RandomForest (seed=43): fit ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFClassifier` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+   val argmax=59613 decode=49566 -> cost_decode; test cost=49671 F1=0.0047
+-> GradientBoosting (seed=43): fit ...
+   val argmax=58096 decode=47593 -> cost_decode; test cost=51765 F1=0.0965
+-> LSTM (seed=44): fit ...
+   val argmax=53821 decode=51833 -> cost_decode; test cost=51987 F1=0.0420
+-> RandomForest (seed=44): fit ...
+/usr/local/lib/python3.13/dist-packages/xgboost/core.py:569: FutureWarning: `XGBRFClassifier` is deprecated and will be removed in a future release. The estimator is a thin wrapper over the boosting interface and does not implement a conventional random forest; features like early stopping are unsupported. Set `num_parallel_tree` along with `n_estimators=1` on the corresponding boosting estimator instead, or use a dedicated random forest implementation like those in `sklearn.ensemble`.
+  return func(**kwargs)
+   val argmax=59002 decode=49566 -> cost_decode; test cost=49671 F1=0.0047
+-> GradientBoosting (seed=44): fit ...
+   val argmax=56357 decode=47354 -> cost_decode; test cost=53063 F1=0.1023
+
+=== Mean test Total_cost over seeds (negative % = beats Always-4) ===
+           model  test_cost_mean  test_cost_std  f1_macro_mean  accuracy_mean  recall_4_mean  cost_vs_always4_pct
+        Always-4    49671.000000            NaN       0.004701       0.011893       1.000000             0.000000
+    RandomForest    49671.000000       0.000000       0.004701       0.011893       1.000000             0.000000
+            LSTM    51224.666667     923.327858       0.026526       0.055302       0.727778             3.127915
+GradientBoosting    51293.333333    2046.675923       0.097537       0.287083       0.461111             3.266158
+        Always-0    56100.000000            NaN       0.197145       0.971853       0.000000            12.943166
+Saved -> /content/crb_work/studies/family_comparison
